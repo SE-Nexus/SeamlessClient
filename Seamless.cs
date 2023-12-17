@@ -1,41 +1,46 @@
-﻿using HarmonyLib;
-using NLog.Fluent;
+﻿using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Reflection;
+using HarmonyLib;
 using Sandbox.Game.World;
+using Sandbox.Graphics.GUI;
 using Sandbox.ModAPI;
+using SeamlessClient.GUI;
 using SeamlessClient.Messages;
 using SeamlessClient.OnlinePlayersWindow;
 using SeamlessClient.ServerSwitching;
 using SeamlessClient.Utilities;
-using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
-using System.Net.NetworkInformation;
-using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
+using Shared.Config;
+using Shared.Logging;
+using Shared.Plugin;
+using VRage.FileSystem;
 using VRage.GameServices;
 using VRage.Plugins;
-using VRage.Sync;
 using VRage.Utils;
 
 namespace SeamlessClient
 {
-    public class Seamless : IPlugin
+    public class Seamless : IPlugin, ICommonPlugin
     {
-        public static Version SeamlessVersion => typeof(Seamless).Assembly.GetName().Version;
         public static Version NexusVersion = new Version(1, 0, 0);
         private static Harmony SeamlessPatcher;
         public static ushort SeamlessClientNetId = 2936;
-
-        private List<ComponentBase> allComps = new List<ComponentBase>();
-        private Assembly thisAssembly => typeof(Seamless).Assembly;
-        private bool Initilized = false;
         public static bool isSeamlessServer = false;
 
         public static bool isDebug = false;
+        private static readonly IPluginLogger Logger = new PluginLogger(Name);
+        public const string Name = "SeamlessClient";
 
-
+        private readonly List<ComponentBase> allComps = new List<ComponentBase>();
+        private bool Initialized;
+        public static Version SeamlessVersion => typeof(Seamless).Assembly.GetName().Version;
+        private static Assembly thisAssembly => typeof(Seamless).Assembly;
+        public IPluginLogger Log => Logger;
+        public IPluginConfig Config => config?.Data;
+        private PersistentConfig<PluginConfig> config;
+        private static readonly string ConfigFileName = $"{Name}.cfg";
+        public long Tick { get; }
 
         public void Init(object gameInstance)
         {
@@ -43,15 +48,38 @@ namespace SeamlessClient
             SeamlessPatcher = new Harmony("SeamlessClientPatcher");
             GetComponents();
             
+            var configPath = Path.Combine(MyFileSystem.UserDataPath, ConfigFileName);
+            config = PersistentConfig<PluginConfig>.Load(Log, configPath);
+
+            
+            Common.SetPlugin(this);
 
             PatchComponents(SeamlessPatcher);
         }
+        
+        public void Dispose()
+        {
 
+        }
+
+        public void Update()
+        {
+            if (MyAPIGateway.Multiplayer == null)
+                return;
+
+            if (!Initialized)
+            {
+                MyAPIGateway.Multiplayer.RegisterSecureMessageHandler(SeamlessClientNetId, MessageHandler);
+                InitilizeComponents();
+
+                Initialized = true;
+            }
+        }
 
         private void GetComponents()
         {
-            int failedCount = 0;
-            foreach (Type type in thisAssembly.GetTypes())
+            var failedCount = 0;
+            foreach (var type in thisAssembly.GetTypes())
             {
 
                 if (type.BaseType != typeof(ComponentBase))
@@ -59,7 +87,7 @@ namespace SeamlessClient
 
                 try
                 {
-                    ComponentBase s = (ComponentBase)Activator.CreateInstance(type);
+                    var s = (ComponentBase)Activator.CreateInstance(type);
                     allComps.Add(s);
 
                 }
@@ -74,7 +102,7 @@ namespace SeamlessClient
 
         private void PatchComponents(Harmony patcher)
         {
-            foreach (ComponentBase component in allComps)
+            foreach (var component in allComps)
             {
                 try
                 {
@@ -92,20 +120,20 @@ namespace SeamlessClient
 
         private void InitilizeComponents()
         {
-            foreach(ComponentBase component in allComps)
+            foreach (var component in allComps)
             {
                 try
                 {
                     component.Initilized();
                     TryShow($"Initilized {component.GetType()}");
 
-                }catch(Exception ex)
+                }
+                catch (Exception ex)
                 {
                     TryShow(ex, $"Failed to initialize {component.GetType()}");
                 }
             }
         }
-
 
         private static void MessageHandler(ushort packetID, byte[] data, ulong sender, bool fromServer)
         {
@@ -113,7 +141,7 @@ namespace SeamlessClient
             if (!fromServer || sender == 0)
                 return;
 
-            ClientMessage msg = MessageUtils.Deserialize<ClientMessage>(data);
+            var msg = MessageUtils.Deserialize<ClientMessage>(data);
             if (msg == null)
                 return;
 
@@ -125,8 +153,8 @@ namespace SeamlessClient
             switch (msg.MessageType)
             {
                 case ClientMessageType.FirstJoin:
-                    Seamless.TryShow("Sending First Join!");
-                    ClientMessage response = new ClientMessage(SeamlessVersion.ToString());
+                    TryShow("Sending First Join!");
+                    var response = new ClientMessage(SeamlessVersion.ToString());
                     MyAPIGateway.Multiplayer?.SendMessageToServer(SeamlessClientNetId, MessageUtils.Serialize(response));
                     break;
 
@@ -142,36 +170,11 @@ namespace SeamlessClient
             }
         }
 
-
-
-        public void Dispose()
-        {
-            
-        }
-
-
-
-        public void Update()
-        {
-            if (MyAPIGateway.Multiplayer == null) 
-                return;
-
-            if (!Initilized)
-            {
-                MyAPIGateway.Multiplayer.RegisterSecureMessageHandler(SeamlessClientNetId, MessageHandler);
-                InitilizeComponents();
-
-                Initilized = true;
-            }
-        }
-
-
-
         public static void StartSwitch(TransferData targetServer)
         {
             if (targetServer.TargetServerId == 0)
             {
-                Seamless.TryShow("This is not a valid server!");
+                TryShow("This is not a valid server!");
                 return;
             }
 
@@ -183,17 +186,10 @@ namespace SeamlessClient
             };
 
 
-            Seamless.TryShow($"Beginning Redirect to server: {targetServer.TargetServerId}");
+            TryShow($"Beginning Redirect to server: {targetServer.TargetServerId}");
             var world = targetServer.WorldRequest.DeserializeWorldData();
             ServerSwitcherComponent.Instance.StartBackendSwitch(server, world);
         }
-
-
-
-
-
-
-
 
         public static void TryShow(string message)
         {
@@ -206,9 +202,16 @@ namespace SeamlessClient
         public static void TryShow(Exception ex, string message)
         {
             if (MySession.Static?.LocalHumanPlayer != null && isDebug)
-                MyAPIGateway.Utilities?.ShowMessage("Seamless", message + $"\n {ex.ToString()}");
+                MyAPIGateway.Utilities?.ShowMessage("Seamless", message + $"\n {ex}");
 
-            MyLog.Default?.WriteLineAndConsole($"SeamlessClient: {message} \n {ex.ToString()}");
+            MyLog.Default?.WriteLineAndConsole($"SeamlessClient: {message} \n {ex}");
+        }
+        
+        // ReSharper disable once UnusedMember.Global
+        // This allows the plugin to open a settings modal
+        public void OpenConfigDialog()
+        {
+            MyGuiSandbox.AddScreen(new PluginConfigDialog());
         }
     }
 }

@@ -1,22 +1,18 @@
-﻿using EmptyKeys.UserInterface.Generated.StoreBlockView_Bindings;
+﻿using System;
+using System.Text;
 using HarmonyLib;
 using Sandbox.Game.Entities;
-using Sandbox.Game.Entities.Cube;
 using Sandbox.Game.GUI.HudViewers;
 using Sandbox.Game.World;
 using SeamlessClient.Utilities;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using Shared.Plugin;
 using VRageMath;
 
 namespace SeamlessClient.Components
 {
     public class MyHudTimeTracker : ComponentBase
     {
-
+        private static bool GPSEtaEnabled => Common.Config.GPSEtaEnabled;
         public override void Patch(Harmony patcher)
         {
             var AppendDistance = PatchUtils.GetMethod(typeof(MyHudMarkerRender), "AppendDistance");
@@ -27,11 +23,13 @@ namespace SeamlessClient.Components
 
         private static void ApplyTimeToTarget(MyHudMarkerRender __instance, StringBuilder stringBuilder, double distance)
         {
+            // feature switch
+            if (!GPSEtaEnabled) return;
+            
             if (distance < 500 || MySession.Static.LocalHumanPlayer == null || MySession.Static.LocalHumanPlayer.Character == null)
                 return;
 
-
-            Vector3 velocity = new Vector3(0, 0, 0);
+            var velocity = new Vector3(0, 0, 0);
             if (MySession.Static.LocalHumanPlayer.Character.Parent is MyCockpit cockpit)
             {
                 velocity = cockpit.CubeGrid.LinearVelocity;
@@ -46,49 +44,33 @@ namespace SeamlessClient.Components
                 return;
 
 
-            double t = Math.Round(CalculateTimeToTarget(v0, distance), 0);
-
-            
+            var t = Math.Round(CalculateTimeToTarget(v0, distance), 0);
 
 
-
-            if(t <= 0)
+            if (t <= 0)
                 return;
 
             stringBuilder.AppendLine($" [T-{FormatDuration(t)}]");
         }
 
-
-
-
-        static string FormatDuration(double durationInSeconds)
+        private static string FormatDuration(double durationInSeconds)
         {
             if (durationInSeconds < 60)
             {
                 return $"{durationInSeconds}s";
             }
-            else
+            var minutes = (int)(durationInSeconds / 60);
+            var remainingSeconds = (int)(durationInSeconds % 60);
+
+
+            if (remainingSeconds > 0)
             {
-
-
-
-                int minutes = (int)(durationInSeconds / 60);
-                int remainingSeconds = (int)(durationInSeconds % 60);
-
-
-                if (remainingSeconds > 0)
-                {
-                    return $"{minutes}m {remainingSeconds}s";
-                }
-                else
-                {
-                    return $"{minutes}m";
-                }
+                return $"{minutes}m {remainingSeconds}s";
             }
+            return $"{minutes}m";
         }
 
-
-        static double CalculateTimeToTarget(double velocity, double distance)
+        private static double CalculateTimeToTarget(double velocity, double distance)
         {
             // Check for zero velocity to avoid division by zero
             if (Math.Abs(velocity) < double.Epsilon)
@@ -98,9 +80,5 @@ namespace SeamlessClient.Components
 
             return distance / velocity;
         }
-
-
-
-
     }
 }

@@ -98,6 +98,7 @@
     <Compile Include="Components\EntityPerformanceImprovements.cs" />
     <Compile Include="Components\LoadingScreenComponent.cs" />
     <Compile Include="Components\MyHudTimeTracker.cs" />
+    <Compile Include="GUI\PluginConfigDialog.cs" />
     <Compile Include="Messages\OnlinePlayerData.cs" />
     <Compile Include="Utilities\UtilExtensions.cs" />
     <Compile Include="Utilities\PatchUtils.cs" />
@@ -128,4 +129,5 @@
     </Content>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <Import Project="Shared\Shared.projitems" Label="Shared" />
 </Project>
