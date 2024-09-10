@@ -37,7 +37,7 @@ namespace SeamlessClient
         private bool Initilized = false;
         public static bool isSeamlessServer { get; private set; } = false;
         public static bool isDebug = false;
-        public static bool UseNewVersion = true;
+        public static bool UseNewVersion = false;
 
         
 

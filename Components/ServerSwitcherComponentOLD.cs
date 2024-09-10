@@ -186,7 +186,8 @@ namespace SeamlessClient.Components
             MyMultiplayer.Static.StartProcessingClientMessages();
 
             //Recreate all controls... Will fix weird gui/paint/crap
-            MyGuiScreenHudSpace.Static.RecreateControls(true);
+            if(MyGuiScreenHudSpace.Static != null)
+                MyGuiScreenHudSpace.Static.RecreateControls(true);
             //MySession.Static.LocalHumanPlayer.BuildArmorSkin = OldArmorSkin;
         }
 
