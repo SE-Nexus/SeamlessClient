@@ -10,26 +10,11 @@ namespace SeamlessClient.Messages
     [ProtoContract]
     public class OnlinePlayerData
     {
-        [ProtoMember(10)] public List<OnlineClientServer> OnlineServers = new List<OnlineClientServer>();
+        [ProtoMember(10)] public List<OnlinePlayer> OnlinePlayers = new List<OnlinePlayer>();
 
         [ProtoMember(12)] public int currentServerID;
     }
 
-    [ProtoContract]
-    public class OnlineClientServer
-    {
-        [ProtoMember(2)] public List<OnlinePlayer> Players = new List<OnlinePlayer>();
-
-        [ProtoMember(3)] public bool ServerRunning = false;
-
-        [ProtoMember(10)] public int ServerID;
-
-        [ProtoMember(11)] public string ServerName;
-
-        public OnlineClientServer()
-        {
-        }
-    }
 
     [ProtoContract]
     public class OnlinePlayer
@@ -41,9 +26,6 @@ namespace SeamlessClient.Messages
         [ProtoMember(3)] public long IdentityID;
 
         [ProtoMember(4)] public int OnServer;
-
-
-        public string ServerName;
 
         public OnlinePlayer(string PlayerName, ulong SteamID, long IdentityID, int OnServer)
         {

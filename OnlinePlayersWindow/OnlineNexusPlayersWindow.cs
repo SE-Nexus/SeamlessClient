@@ -385,7 +385,8 @@ namespace SeamlessClient.OnlinePlayersWindow
             Controls.Add(m_playersTable);
 
 
-            string servername = PlayersWindowComponent.onlineServer?.ServerName ?? "thisServer";
+            //string servername = PlayersWindowComponent.onlineServer?.ServerName ?? "thisServer";
+            string servername = "thisserver";
 
             foreach (MyPlayer onlinePlayer in Sync.Players.GetOnlinePlayers())
             {
@@ -408,13 +409,14 @@ namespace SeamlessClient.OnlinePlayersWindow
                 AddPlayer(onlinePlayer.Id.SteamId, servername);
             }
 
-
+            /*
             foreach(var server in PlayersWindowComponent.allServers)
             {
 
                 foreach(var player in server.Players)
                     AddPlayerFromOtherServer(player, server.ServerName);
             }
+            */
 
 
             m_lobbyTypeCombo.ItemSelected += lobbyTypeCombo_OnSelect;
@@ -796,7 +798,7 @@ namespace SeamlessClient.OnlinePlayersWindow
 
         protected void Multiplayer_PlayerJoined(ulong userId, string userName)
         {
-            AddPlayer(userId, PlayersWindowComponent.onlineServer.ServerName);
+            //AddPlayer(userId, PlayersWindowComponent.onlineServer.ServerName);
         }
 
         protected void Multiplayer_PlayerLeft(ulong userId, MyChatMemberStateChangeEnum arg2)

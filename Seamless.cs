@@ -1,13 +1,13 @@
 ﻿using HarmonyLib;
 using NLog.Fluent;
 using Sandbox;
+using Sandbox.Game.Entities;
 using Sandbox.Game.Localization;
 using Sandbox.Game.World;
 using Sandbox.ModAPI;
 using SeamlessClient.Components;
 using SeamlessClient.Messages;
 using SeamlessClient.OnlinePlayersWindow;
-using SeamlessClient.ServerSwitching;
 using SeamlessClient.Utilities;
 using System;
 using System.Collections.Generic;
@@ -33,6 +33,7 @@ namespace SeamlessClient
         public static ushort SeamlessClientNetId = 2936;
 
         private List<ComponentBase> allComps = new List<ComponentBase>();
+        
         private Assembly thisAssembly => typeof(Seamless).Assembly;
         private bool Initilized = false;
         public static bool isSeamlessServer { get; private set; } = false;
@@ -141,7 +142,7 @@ namespace SeamlessClient
                 case ClientMessageType.OnlinePlayers:
                     //Not implemented yet
                     var playerData = msg.GetOnlinePlayers();
-                    PlayersWindowComponent.ApplyRecievedPlayers(playerData.OnlineServers, playerData.currentServerID);
+                    //PlayersWindowComponent.ApplyRecievedPlayers(playerData.OnlineServers, playerData.currentServerID);
                     break;
             }
         }
@@ -204,11 +205,11 @@ namespace SeamlessClient
             Seamless.TryShow($"Beginning Redirect to server: {targetServer.TargetServerId}");
             var world = targetServer.WorldRequest.DeserializeWorldData();
 
+
+            SeamlessSwitcher.Instance.StartSwitch(server, world);
             //Temp fix till im not lazy enough to fix new version
-            if (UseNewVersion)
-                ServerSwitcherComponent.Instance.StartBackendSwitch(server, world);
-            else
-                ServerSwitcherComponentOLD.Instance.StartBackendSwitch(server, world);
+
+
         }
 
 

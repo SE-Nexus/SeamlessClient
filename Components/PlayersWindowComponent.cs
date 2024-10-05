@@ -16,8 +16,8 @@ namespace SeamlessClient.OnlinePlayersWindow
 
     public class PlayersWindowComponent : ComponentBase
     {
-        public static List<OnlineClientServer> allServers = new List<OnlineClientServer>();
-        public static OnlineClientServer onlineServer;
+        //public static List<OnlineClientServer> allServers = new List<OnlineClientServer>();
+        //public static OnlineClientServer onlineServer;
 
 
         public override void Patch(Harmony patcher)
@@ -38,6 +38,7 @@ namespace SeamlessClient.OnlinePlayersWindow
             }
         }
 
+        /*
         public static void ApplyRecievedPlayers(List<OnlineClientServer> servers, int CurrentServer)
         {
             //Seamless.TryShow($"Recieved {CurrentServer} - {servers.Count}");
@@ -56,6 +57,7 @@ namespace SeamlessClient.OnlinePlayersWindow
                 allServers.Add(server);
             }
         }
+        */
 
 
 

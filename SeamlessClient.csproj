@@ -105,9 +105,11 @@
     <Compile Include="Components\LoadingScreenComponent.cs" />
     <Compile Include="Components\MyGUIScreenMedicalsPatch.cs" />
     <Compile Include="Components\MyHudTimeTracker.cs" />
-    <Compile Include="Components\ServerSwitcherComponentOLD.cs" />
+    <Compile Include="Components\SeamlessScriptManager.cs" />
+    <Compile Include="Components\SeamlessSwitcher.cs" />
     <Compile Include="GUI\Screens\GUILoadingScreen.cs" />
     <Compile Include="Messages\OnlinePlayerData.cs" />
+    <Compile Include="Utilities\GameEvents.cs" />
     <Compile Include="Utilities\UtilExtensions.cs" />
     <Compile Include="Utilities\PatchUtils.cs" />
     <Compile Include="Messages\ClientMessage.cs" />
@@ -117,7 +119,6 @@
     <Compile Include="Components\PlayersWindowComponent.cs" />
     <Compile Include="Seamless.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Components\ServerSwitcherComponent.cs" />
     <Compile Include="Utilities\AsyncInvoke.cs" />
     <Compile Include="Utilities\MessageUtils.cs" />
     <Compile Include="Utilities\ComponentBase.cs" />
