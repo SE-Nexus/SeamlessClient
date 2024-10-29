@@ -264,13 +264,36 @@ namespace SeamlessClient.Components
 
             }
 
+            //Following event doesnt clear networked replicables
             MyMultiplayer.Static.ReplicationLayer.Dispose();
+            ClearClientReplicables();
+
+
+
             PreventRPC = true;
             StartPacketCheck = true;
 
             //_ClearTransportLayer.Invoke(_TransportLayer.GetValue(MyMultiplayer.Static.SyncLayer), null);
 
 
+        }
+
+        private void ClearClientReplicables()
+        {
+            MyReplicationClient replicationClient = (MyReplicationClient)MyMultiplayer.Static.ReplicationLayer;
+
+            Dictionary<NetworkId,IMyNetObject> networkedobjs = (Dictionary<NetworkId, IMyNetObject>)typeof(MyReplicationLayer).GetField("m_networkIDToObject", BindingFlags.Instance | BindingFlags.NonPublic).GetValue(replicationClient);
+
+            MethodInfo destroyreplicable = typeof(MyReplicationClient).GetMethod("ReplicableDestroy", BindingFlags.Instance | BindingFlags.NonPublic);
+
+            int i = 0;
+            foreach(var obj in networkedobjs)
+            {
+                destroyreplicable.Invoke(replicationClient, new object[] { obj.Value, true });
+                i++;
+            }
+
+            Seamless.TryShow($"Cleared {i} replicables");
         }
 
         private void OnUserJoined(JoinResult joinResult)
