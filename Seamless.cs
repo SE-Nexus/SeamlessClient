@@ -2,6 +2,7 @@
 using NLog.Fluent;
 using Sandbox;
 using Sandbox.Game.Entities;
+using Sandbox.Game.Gui;
 using Sandbox.Game.Localization;
 using Sandbox.Game.World;
 using Sandbox.ModAPI;
@@ -180,8 +181,6 @@ namespace SeamlessClient
 
             IMyGameServer server = MyServiceManager.Instance.GetService<IMyGameServer>();
             MySandboxGame.PausePop();
-
-
         }
 
 

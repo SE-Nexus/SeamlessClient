@@ -37,6 +37,7 @@ using VRage.Game.Entity;
 using VRageRender.Effects;
 using VRage.Scripting;
 using VRage.Utils;
+using SpaceEngineers.Game.World;
 
 namespace SeamlessClient.Components
 {
@@ -63,6 +64,8 @@ namespace SeamlessClient.Components
         private ulong TargetServerID;
         private static bool PreventRPC = false;
         private static bool StartPacketCheck = false;
+
+        private bool keepGrid = false;
 
         public SeamlessSwitcher() 
         {
@@ -216,13 +219,16 @@ namespace SeamlessClient.Components
                 if (ent is MyPlanet || ent is MyCubeGrid)
                     continue;
 
-                if(ent.EntityId == _OriginalCharacterEntity && ent is MyCharacter character)
+                if((ent.EntityId == _OriginalCharacterEntity && keepGrid) && ent is MyCharacter character)
                 {
                     continue;
                 }
 
                 ent.Close();
             }
+
+
+
 
             List<IMyGridGroupData> grids = new List<IMyGridGroupData>();
             
@@ -235,17 +241,17 @@ namespace SeamlessClient.Components
                 if (localGrids.Count == 0)
                     continue;
 
-                if (localGrids.Any(x => x.EntityId == _OriginalGridEntity))
+                if (localGrids.Any(x => x.EntityId == _OriginalGridEntity) && keepGrid)
                 {
 
                     foreach(var grid in localGrids)
                     {
                         MyEntity ent = grid as MyEntity;
                         allGrids.Add((MyCubeGrid)grid);
-                        grid.Synchronized = false;
+                        //grid.Synchronized = false;
 
-                        ent.SyncFlag = false;
-                        ent.Save = false;
+                        //ent.SyncFlag = false;
+                        //ent.Save = false;
 
                         
 
@@ -411,7 +417,7 @@ namespace SeamlessClient.Components
 
             MyGuiSandbox.UnloadContent();
             MyGuiSandbox.LoadContent();
-            MyGuiScreenHudSpace.Static?.RecreateControls(true);
+           
 
 
 
@@ -432,7 +438,11 @@ namespace SeamlessClient.Components
                 MySandboxGame.AreClipmapsReady = false;
             }
             MyMultiplayer.Static.PendingReplicablesDone -= Static_PendingReplicablesDone;
+           
 
+            //Try find existing seat:
+            //bool found = (bool)typeof(MySpaceRespawnComponent).GetMethod("TryFindExistingCharacter", BindingFlags.Static | BindingFlags.NonPublic).Invoke(null, new object[] { MySession.Static.LocalHumanPlayer });
+            MyGuiScreenHudSpace.Static?.RecreateControls(true);
         }
 
 
