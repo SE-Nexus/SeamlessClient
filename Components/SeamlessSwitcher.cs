@@ -38,6 +38,9 @@ using VRageRender.Effects;
 using VRage.Scripting;
 using VRage.Utils;
 using SpaceEngineers.Game.World;
+using VRage.Collections;
+using VRage.Game.Components;
+using System.CodeDom;
 
 namespace SeamlessClient.Components
 {
@@ -66,10 +69,15 @@ namespace SeamlessClient.Components
         private static bool StartPacketCheck = false;
 
         private bool keepGrid = false;
+        private ModReloader modReload;
+
+
 
         public SeamlessSwitcher() 
         {
-            Instance = this;    
+            Instance = this;
+            modReload = new ModReloader();
+
         }
 
 
@@ -106,7 +114,7 @@ namespace SeamlessClient.Components
             patcher.Patch(_SendRPC, prefix: preSendRPC);
 
 
-
+            modReload.Patch(patcher);
             base.Patch(patcher);
         }
 
@@ -143,6 +151,8 @@ namespace SeamlessClient.Components
             /* Set New Multiplayer Stuff */
             _MyGameServerItemProperty.SetValue(MyMultiplayer.Static, TargetServer);
             _MultiplayerServerID.SetValue(MyMultiplayer.Static, TargetServer.SteamID);
+            
+
 
             /* Connect To Server */
             MyGameService.ConnectToServer(TargetServer, delegate (JoinResult joinResult)
@@ -184,7 +194,7 @@ namespace SeamlessClient.Components
             typeof(MyMultiplayerBase).GetMethod("SendControlMessage", BindingFlags.Instance | BindingFlags.NonPublic).MakeGenericMethod(typeof(MyControlDisconnectedMsg)).Invoke(MyMultiplayer.Static, new object[] { Sync.ServerId, myControlDisconnectedMsg, true });
             MyGameService.Peer2Peer.CloseSession(Sync.ServerId);
             MyGameService.DisconnectFromServer();
-
+            MyGameService.ClearCache();
 
            
 
@@ -199,6 +209,8 @@ namespace SeamlessClient.Components
 
             UnloadOldEntities();
             ResetReplicationTime(false);
+           
+
 
             //MyMultiplayer.Static.ReplicationLayer.Disconnect();
             //MyMultiplayer.Static.ReplicationLayer.Dispose();
@@ -284,6 +296,10 @@ namespace SeamlessClient.Components
 
         }
 
+
+
+      
+
         private void ClearClientReplicables()
         {
             MyReplicationClient replicationClient = (MyReplicationClient)MyMultiplayer.Static.ReplicationLayer;
@@ -310,6 +326,8 @@ namespace SeamlessClient.Components
                 return;
 
             Seamless.TryShow($"OnUserJoin! Result: {joinResult}");
+            modReload.UnloadModSessionComponents();
+
             LoadDestinationServer();
 
 
@@ -323,6 +341,8 @@ namespace SeamlessClient.Components
             Seamless.TryShow($"5 Streaming: {clienta.HasPendingStreamingReplicables} - LastMessage: {clienta.LastMessageFromServer}");
             Seamless.TryShow($"5 NexusMajor: {Seamless.NexusVersion.Major} - ConrolledEntity {MySession.Static.ControlledEntity == null} - HumanPlayer {MySession.Static.LocalHumanPlayer == null} - Character {MySession.Static.LocalCharacter == null}");
             Seamless.TryShow("Starting new MP Client!");
+
+
 
             /* On Server Successfull Join
              * 
@@ -350,33 +370,28 @@ namespace SeamlessClient.Components
 
             typeof(MySandboxGame).GetField("m_pauseStackCount", BindingFlags.Static | BindingFlags.NonPublic).SetValue(null, 0);
 
+           
             Seamless.TryShow($"6 NexusMajor: {Seamless.NexusVersion.Major} - ConrolledEntity {MySession.Static.ControlledEntity == null} - HumanPlayer {MySession.Static.LocalHumanPlayer == null} - Character {MySession.Static.LocalCharacter == null}");
             Seamless.TryShow($"6 Streaming: {clienta.HasPendingStreamingReplicables} - LastMessage: {clienta.LastMessageFromServer}");
 
+            modReload.AddModComponents();
+            SendClientReady();
 
-          
-           
 
 
-            
+
+
             ResetReplicationTime(true);
             //MyPlayerCollection.ChangePlayerCharacter(MySession.Static.LocalHumanPlayer, MySession.Static.LocalCharacter, MySession.Static.LocalCharacter);
             // Allow the game to start proccessing incoming messages in the buffer
             //MyMultiplayer.Static.StartProcessingClientMessages();
             //Send Client Ready
-            ClientReadyDataMsg clientReadyDataMsg = default(ClientReadyDataMsg);
-            clientReadyDataMsg.ForcePlayoutDelayBuffer = MyFakes.ForcePlayoutDelayBuffer;
-            clientReadyDataMsg.UsePlayoutDelayBufferForCharacter = true;
-            clientReadyDataMsg.UsePlayoutDelayBufferForJetpack = true;
-            clientReadyDataMsg.UsePlayoutDelayBufferForGrids = true;
-            ClientReadyDataMsg msg = clientReadyDataMsg;
-            clienta.SendClientReady(ref msg);
-
             PreventRPC = false;
             //_ClearTransportLayer.Invoke(_TransportLayer.GetValue(MyMultiplayer.Static.SyncLayer), null);
 
+           
             StartEntitySync();
-            Seamless.SendSeamlessVersion();
+         
 
 
           
@@ -388,23 +403,25 @@ namespace SeamlessClient.Components
 
         }
 
+        private void SendClientReady()
+        {
+            MyReplicationClient clienta = (MyReplicationClient)MyMultiplayer.Static.ReplicationLayer;
+            ClientReadyDataMsg clientReadyDataMsg = default(ClientReadyDataMsg);
+            clientReadyDataMsg.ForcePlayoutDelayBuffer = MyFakes.ForcePlayoutDelayBuffer;
+            clientReadyDataMsg.UsePlayoutDelayBufferForCharacter = true;
+            clientReadyDataMsg.UsePlayoutDelayBufferForJetpack = true;
+            clientReadyDataMsg.UsePlayoutDelayBufferForGrids = true;
+            ClientReadyDataMsg msg = clientReadyDataMsg;
+            clienta.SendClientReady(ref msg);
+
+            Seamless.SendSeamlessVersion();
+        }
+
         private void StartEntitySync()
         {
             Seamless.TryShow("Requesting Player From Server");
 
-            Sync.Players.RequestNewPlayer(Sync.MyId, 0, MyGameService.UserName, null, true, true);
-            if (!Sandbox.Engine.Platform.Game.IsDedicated && MySession.Static.LocalHumanPlayer == null)
-            {
-                Seamless.TryShow("RequestNewPlayer");
-
-
-            }
-            else if (MySession.Static.ControlledEntity == null && Sync.IsServer && !Sandbox.Engine.Platform.Game.IsDedicated)
-            {
-                Seamless.TryShow("ControlledObject was null, respawning character");
-                //m_cameraAwaitingEntity = true;
-                MyPlayerCollection.RequestLocalRespawn();
-            }
+          
 
 
 
@@ -438,7 +455,19 @@ namespace SeamlessClient.Components
                 MySandboxGame.AreClipmapsReady = false;
             }
             MyMultiplayer.Static.PendingReplicablesDone -= Static_PendingReplicablesDone;
-           
+
+
+            Sync.Players.RequestNewPlayer(Sync.MyId, 0, MyGameService.UserName, null, true, true);
+            if (!Sandbox.Engine.Platform.Game.IsDedicated && MySession.Static.LocalHumanPlayer == null)
+            {
+                Seamless.TryShow("RequestNewPlayer");
+            }
+            else if (MySession.Static.ControlledEntity == null && Sync.IsServer && !Sandbox.Engine.Platform.Game.IsDedicated)
+            {
+                Seamless.TryShow("ControlledObject was null, respawning character");
+                //m_cameraAwaitingEntity = true;
+                MyPlayerCollection.RequestLocalRespawn();
+            }
 
             //Try find existing seat:
             //bool found = (bool)typeof(MySpaceRespawnComponent).GetMethod("TryFindExistingCharacter", BindingFlags.Static | BindingFlags.NonPublic).Invoke(null, new object[] { MySession.Static.LocalHumanPlayer });

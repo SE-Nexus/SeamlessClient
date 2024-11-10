@@ -34,6 +34,14 @@
     <Reference Include="0Harmony, Version=2.3.3.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>packages\Lib.Harmony.2.3.3\lib\net48\0Harmony.dll</HintPath>
     </Reference>
+    <Reference Include="Microsoft.CodeAnalysis">
+      <HintPath>GameBinaries\Microsoft.CodeAnalysis.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="Microsoft.CodeAnalysis.CSharp">
+      <HintPath>GameBinaries\Microsoft.CodeAnalysis.CSharp.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
     <Reference Include="NLog">
       <HintPath>GameBinaries\NLog.dll</HintPath>
       <Private>False</Private>
@@ -68,6 +76,10 @@
       <Private>False</Private>
     </Reference>
     <Reference Include="System" />
+    <Reference Include="System.Collections.Immutable, Version=8.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>GameBinaries\System.Collections.Immutable.dll</HintPath>
+    </Reference>
     <Reference Include="System.Core" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
@@ -99,17 +111,25 @@
       <HintPath>GameBinaries\VRage.Render.dll</HintPath>
       <Private>False</Private>
     </Reference>
+    <Reference Include="VRage.Scripting">
+      <HintPath>GameBinaries\VRage.Scripting.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Components\EntityPerformanceImprovements.cs" />
     <Compile Include="Components\LoadingScreenComponent.cs" />
+    <Compile Include="Components\ModReloader.cs" />
     <Compile Include="Components\MyGUIScreenMedicalsPatch.cs" />
     <Compile Include="Components\MyHudTimeTracker.cs" />
     <Compile Include="Components\SeamlessScriptManager.cs" />
     <Compile Include="Components\SeamlessSwitcher.cs" />
     <Compile Include="GUI\Screens\GUILoadingScreen.cs" />
     <Compile Include="Messages\OnlinePlayerData.cs" />
+    <Compile Include="Models\ModCache.cs" />
+    <Compile Include="Models\ModByte.cs" />
     <Compile Include="Utilities\GameEvents.cs" />
+    <Compile Include="Utilities\NetUtils.cs" />
     <Compile Include="Utilities\UtilExtensions.cs" />
     <Compile Include="Utilities\PatchUtils.cs" />
     <Compile Include="Messages\ClientMessage.cs" />

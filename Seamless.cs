@@ -113,6 +113,10 @@ namespace SeamlessClient
             }
         }
 
+        private static void MessageHandler2(ushort packetID, byte[] data, ulong sender, bool fromServer)
+        {
+            Seamless.TryShow("Recieved visuals");
+        }
 
         private static void MessageHandler(ushort packetID, byte[] data, ulong sender, bool fromServer)
         {
@@ -174,6 +178,7 @@ namespace SeamlessClient
             if (!Initilized)
             {
                 MyAPIGateway.Multiplayer.RegisterSecureMessageHandler(SeamlessClientNetId, MessageHandler);
+                MyAPIGateway.Multiplayer.RegisterSecureMessageHandler(2938, MessageHandler2);
                 InitilizeComponents();
 
                 Initilized = true;
