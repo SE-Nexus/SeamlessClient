@@ -41,35 +41,38 @@ using SpaceEngineers.Game.World;
 using VRage.Collections;
 using VRage.Game.Components;
 using System.CodeDom;
+using System.Diagnostics;
 
 namespace SeamlessClient.Components
 {
     public class SeamlessSwitcher : ComponentBase
     {
-        private bool isSwitchingServer = false;
+        private static bool isSwitchingServer = false;
 
         private PropertyInfo _MyGameServerItemProperty;
         private PropertyInfo _MultiplayerServerID;
         private static MethodInfo PauseClient;
-        private MethodInfo _SendPlayerData;
+        private static MethodInfo _SendPlayerData;
         private MethodInfo _SendFlush;
         private MethodInfo _ClearTransportLayer;
         private FieldInfo _NetworkWriteQueue;
         private FieldInfo _TransportLayer;
 
-        private MethodInfo _OnConnectToServer;
+
         public static SeamlessSwitcher Instance;
 
         private static List<MyCubeGrid> allGrids = new List<MyCubeGrid>();
 
         private long _OriginalCharacterEntity = -1;
         private long _OriginalGridEntity = -1;
-        private ulong TargetServerID;
+        private static ulong TargetServerID;
         private static bool PreventRPC = false;
         private static bool StartPacketCheck = false;
 
         private bool keepGrid = false;
-        private ModReloader modReload;
+        private static ModReloader modReload;
+
+        private static Stopwatch switchTime = new Stopwatch();
 
 
 
@@ -86,7 +89,7 @@ namespace SeamlessClient.Components
             _MyGameServerItemProperty = PatchUtils.GetProperty(PatchUtils.ClientType, "Server");
             _MultiplayerServerID = PatchUtils.GetProperty(typeof(MyMultiplayerBase), "ServerId");
 
-            _OnConnectToServer = PatchUtils.GetMethod(PatchUtils.ClientType, "OnConnectToServer");
+
             PauseClient = PatchUtils.GetMethod(PatchUtils.MyMultiplayerClientBase, "PauseClient");
 
             _SendPlayerData = PatchUtils.GetMethod(PatchUtils.ClientType, "SendPlayerData");
@@ -106,30 +109,53 @@ namespace SeamlessClient.Components
             var method = AccessTools.Method(PatchUtils.MyTransportLayerType, "SendMessage", new Type[] { typeof(MyMessageId), typeof(IPacketData), typeof(bool), typeof(EndpointId), typeof(byte) });
             var patchSend = PatchUtils.GetMethod(this.GetType(), "SendMessage_Patch");
 
-
-
+            var OnUserJoin = AccessTools.Method(PatchUtils.ClientType, "OnUserJoined");
+            var LocalOnUserJoin = PatchUtils.GetMethod(this.GetType(), nameof(OnUserJoined_Patch));
 
 
             patcher.Patch(method, prefix: patchSend);
             patcher.Patch(_SendRPC, prefix: preSendRPC);
+            patcher.Patch(OnUserJoin, postfix: LocalOnUserJoin);
 
 
             modReload.Patch(patcher);
             base.Patch(patcher);
         }
 
+
+        //This method is when we have fully joined the server. It is a patched method
+        private static void OnUserJoined_Patch(JoinResultMsg msg)
+        {
+            if (!isSwitchingServer)
+                return;
+
+
+            if (msg.JoinResult != JoinResult.OK)
+                return;
+
+            Seamless.TryShow($"OnUserJoin! Result: {msg.JoinResult}");
+            LoadDestinationServer();
+
+            isSwitchingServer = false;
+            switchTime.Stop();
+            Seamless.TryShow($"Total Seamless time: {switchTime.ElapsedMilliseconds}");
+        }
+
+
+
         public static void SendMessage_Patch(MyMessageId id, IPacketData data, bool reliable, EndpointId endpoint, byte index = 0)
         {
             if (!StartPacketCheck)
                 return;
 
-            MyLog.Default?.WriteLineAndConsole($"{System.Environment.StackTrace}");
-            Seamless.TryShow($"Id:{id} -> {endpoint}");
+            //MyLog.Default?.WriteLineAndConsole($"{System.Environment.StackTrace}");
+            //Seamless.TryShow($"Id:{id} -> {endpoint}");
         }
 
 
         public void StartSwitch(MyGameServerItem TargetServer, MyObjectBuilder_World TargetWorld)
         {
+            switchTime.Restart();
             isSwitchingServer = true;
             TargetServerID = TargetServer.GameID;
             MyReplicationClient localMPClient = (MyReplicationClient)MyMultiplayer.Static.ReplicationLayer;
@@ -157,16 +183,23 @@ namespace SeamlessClient.Components
             /* Connect To Server */
             MyGameService.ConnectToServer(TargetServer, delegate (JoinResult joinResult)
             {
+                
                 MySandboxGame.Static.Invoke(delegate
                 {
                     Seamless.TryShow("Connected to server!");
-                    _OnConnectToServer.Invoke(MyMultiplayer.Static, new object[] { joinResult });
-                    OnUserJoined(joinResult);
+                    //_OnConnectToServer.Invoke(MyMultiplayer.Static, new object[] { joinResult });
+                    _SendPlayerData.Invoke(MyMultiplayer.Static, new object[] { MyGameService.OnlineName });
+                    modReload.UnloadModSessionComponents();
+
 
                 }, "OnConnectToServer");
             });
 
         }
+
+
+
+
 
         private void UnloadCurrentServer(MyReplicationClient localMPClient)
         {
@@ -318,24 +351,8 @@ namespace SeamlessClient.Components
             Seamless.TryShow($"Cleared {i} replicables");
         }
 
-        private void OnUserJoined(JoinResult joinResult)
-        {
-            isSwitchingServer = false;
 
-            if (joinResult != JoinResult.OK)
-                return;
-
-            Seamless.TryShow($"OnUserJoin! Result: {joinResult}");
-            modReload.UnloadModSessionComponents();
-
-            LoadDestinationServer();
-
-
-
-            _SendPlayerData.Invoke(MyMultiplayer.Static, new object[] { MyGameService.OnlineName });
-        }
-
-        private void LoadDestinationServer()
+        private static void LoadDestinationServer()
         {
             MyReplicationClient clienta = (MyReplicationClient)MyMultiplayer.Static.ReplicationLayer;
             Seamless.TryShow($"5 Streaming: {clienta.HasPendingStreamingReplicables} - LastMessage: {clienta.LastMessageFromServer}");
@@ -403,7 +420,7 @@ namespace SeamlessClient.Components
 
         }
 
-        private void SendClientReady()
+        private static void SendClientReady()
         {
             MyReplicationClient clienta = (MyReplicationClient)MyMultiplayer.Static.ReplicationLayer;
             ClientReadyDataMsg clientReadyDataMsg = default(ClientReadyDataMsg);
@@ -417,7 +434,7 @@ namespace SeamlessClient.Components
             Seamless.SendSeamlessVersion();
         }
 
-        private void StartEntitySync()
+        private static void StartEntitySync()
         {
             Seamless.TryShow("Requesting Player From Server");
 
@@ -448,7 +465,7 @@ namespace SeamlessClient.Components
             Seamless.TryShow("Loading Complete!");
         }
 
-        private void Static_PendingReplicablesDone()
+        private static void Static_PendingReplicablesDone()
         {
             if (MySession.Static.VoxelMaps.Instances.Count > 0)
             {
@@ -475,7 +492,7 @@ namespace SeamlessClient.Components
         }
 
 
-        public void ResetReplicationTime(bool ClientReady)
+        public static void ResetReplicationTime(bool ClientReady)
         {
 
 

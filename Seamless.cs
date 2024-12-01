@@ -38,7 +38,7 @@ namespace SeamlessClient
         private Assembly thisAssembly => typeof(Seamless).Assembly;
         private bool Initilized = false;
         public static bool isSeamlessServer { get; private set; } = false;
-        public static bool isDebug = false;
+        public static bool isDebug = true;
         public static bool UseNewVersion = false;
 
         
@@ -136,7 +136,7 @@ namespace SeamlessClient
             switch (msg.MessageType)
             {
                 case ClientMessageType.FirstJoin:
-                    Seamless.TryShow("Sending First Join!");
+                    //Seamless.TryShow("Sending First Join!");
                     SendSeamlessVersion();
                     break;
 
@@ -156,7 +156,7 @@ namespace SeamlessClient
         {
             ClientMessage response = new ClientMessage(SeamlessVersion.ToString());
             MyAPIGateway.Multiplayer?.SendMessageToServer(SeamlessClientNetId, MessageUtils.Serialize(response));
-            Seamless.TryShow("Sending Seamless request...");
+            //Seamless.TryShow("Sending Seamless request...");
         }
 
 
