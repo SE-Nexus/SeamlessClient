@@ -1,4 +1,5 @@
-﻿using HarmonyLib;
+﻿using EmptyKeys.UserInterface.Generated.DataTemplatesContracts_Bindings;
+using HarmonyLib;
 using Sandbox.Game.GUI.HudViewers;
 using Sandbox.Game.Localization;
 using Sandbox.Graphics.GUI;
@@ -40,6 +41,10 @@ namespace SeamlessClient.Components
 
             MyGuiControlTable myGuiControlTable = (MyGuiControlTable)typeof(MyGuiScreenMedicals).GetField("m_respawnsTable", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic).GetValue(__instance);
             string s = MyTexts.GetString(MySpaceTexts.SpawnInSpaceSuit);
+
+            if (s == null || myGuiControlTable == null)
+                return;
+
             foreach (var item in myGuiControlTable.Rows)
             {
                 if (item.GetCell(0) == null)

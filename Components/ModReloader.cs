@@ -30,8 +30,11 @@ namespace SeamlessClient.Components
      */
     public class ModReloader
     {
-        Dictionary<Type, MyModContext> sessionsBeingRemoved = new Dictionary<Type, MyModContext>();
+        Dictionary<Type, MySessionComponentBase> sessionsBeingRemoved = new Dictionary<Type, MySessionComponentBase>();
+        Dictionary<Type, MySessionComponentBase> sessionsToUnload = new Dictionary<Type, MySessionComponentBase>();
         private static ModCache modCache = new ModCache();
+        private bool Unloading = false;
+        private long Ticks = 0;
 
 
         public void Patch(Harmony patcher)
@@ -49,6 +52,29 @@ namespace SeamlessClient.Components
             modCache.AddModToCache(__result, rawAssembly);
         }
 
+        public void Update()
+        {
+            if (!Unloading)
+                return;
+
+            if (Ticks == 1)
+            {
+                foreach (var item in sessionsToUnload)
+                {
+                    //Calls the component to be unloaded
+                    //item.Value.UnloadDataConditional();
+                    Seamless.TryShow($"Unloaded {item.Value.ModContext.ModName}");
+                }
+
+                sessionsToUnload.Clear();
+                Unloading = false;
+                Ticks = 0;
+            }
+            else
+            {
+                Ticks++;
+            }
+        }
 
 
         public void UnloadModSessionComponents()
@@ -56,42 +82,40 @@ namespace SeamlessClient.Components
             CachingDictionary<Type, MySessionComponentBase> sessionComponents = (CachingDictionary<Type, MySessionComponentBase>)typeof(MySession).GetField("m_sessionComponents", BindingFlags.Instance | BindingFlags.NonPublic).GetValue(MySession.Static);
             List<MySessionComponentBase> m_loadOrder = (List<MySessionComponentBase>)typeof(MySession).GetField("m_loadOrder", BindingFlags.Instance | BindingFlags.NonPublic).GetValue(MySession.Static);
             List<MySessionComponentBase> m_sessionComponentForDraw = (List<MySessionComponentBase>)typeof(MySession).GetField("m_sessionComponentForDraw", BindingFlags.Instance | BindingFlags.NonPublic).GetValue(MySession.Static);
+            List<MySessionComponentBase> m_sessionComponentForDrawAsync = (List<MySessionComponentBase>)typeof(MySession).GetField("m_sessionComponentForDrawAsync", BindingFlags.Instance | BindingFlags.NonPublic).GetValue(MySession.Static);
             Dictionary<int, SortedSet<MySessionComponentBase>> m_sessionComponentsForUpdate = (Dictionary<int, SortedSet<MySessionComponentBase>>)typeof(MySession).GetField("m_sessionComponentsForUpdate", BindingFlags.Instance | BindingFlags.NonPublic).GetValue(MySession.Static);
-         
+
             foreach (var component in sessionComponents)
             {
                 if (component.Value.ModContext != null && !component.Value.ModContext.IsBaseGame)
                 {
                     Seamless.TryShow($"{component.Key.FullName}");
-                    sessionsBeingRemoved.Add(component.Key, component.Value.ModContext as MyModContext);
-
-                    //Calls the component to be unloaded
-                    component.Value.UnloadDataConditional();
-                    m_loadOrder.Remove(component.Value);
+                    sessionsBeingRemoved.Add(component.Key, component.Value);
+                    sessionsToUnload.Add(component.Key, component.Value);
                 }
             }
 
 
-
             /* Remove all */
 
+
             //Remove from session components
-            foreach (var item in sessionsBeingRemoved)
-                sessionComponents.Remove(item.Key, true);
+            sessionComponents.Clear();
 
             //Remove from draw
-            m_sessionComponentForDraw.RemoveAll(x => x.ModContext != null && !x.ModContext.IsBaseGame);
-
+            m_sessionComponentForDraw.Clear();
+            m_sessionComponentForDrawAsync.Clear();
 
             //Remove from update
-            foreach (var kvp in m_sessionComponentsForUpdate)
+            foreach (var item in m_sessionComponentsForUpdate.Values)
             {
-                kvp.Value.RemoveWhere(x => sessionsBeingRemoved.ContainsKey(x.ComponentType));
+                item.Clear();
             }
 
-            
+            //Remove from load order
+            m_loadOrder.Clear();
 
-
+            Unloading = true;
         }
 
         public void AddModComponents()
@@ -105,13 +129,13 @@ namespace SeamlessClient.Components
             {
 
                 //If it fails, skip the mod? Or try to use old type? (May Fail to load)
-                if (!modCache.TryGetModAssembly(item.Value.ModItem.PublishedFileId, out Assembly newModAssembly))
+                if (!modCache.TryGetModAssembly(item.Value.ModContext.ModItem.PublishedFileId, out Assembly newModAssembly))
                     continue;
 
 
                 Type newType = newModAssembly.GetType(item.Key.FullName);
                 MySessionComponentBase mySessionComponentBase = (MySessionComponentBase)Activator.CreateInstance(newType);
-                mySessionComponentBase.ModContext = item.Value;
+                mySessionComponentBase.ModContext = item.Value.ModContext;
 
                 
                 MySession.Static.RegisterComponent(mySessionComponentBase, mySessionComponentBase.UpdateOrder, mySessionComponentBase.Priority);
@@ -135,6 +159,4 @@ namespace SeamlessClient.Components
             Seamless.TryShow($"Loaded {newLoadedmods} mods");
         }
     }
-
-
 }
