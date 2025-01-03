@@ -98,9 +98,6 @@ namespace SeamlessClient.GUI.Screens
 
         private Timer backgroundTimer = new Timer(8000);
 
-
-
-
         /// <summary>
         /// Event created once the screen has been loaded and added to GUI manager.
         /// </summary>
@@ -158,13 +155,6 @@ namespace SeamlessClient.GUI.Screens
             MySession.LoadingLocalClear = (Action)Delegate.Combine(MySession.LoadingLocalClear, new Action(ClearLocalProgress));
             MySession.LoadingLocalBoundSet = (Action<LoadingProgress, LoadingProgress>)Delegate.Combine(MySession.LoadingLocalBoundSet, new Action<LoadingProgress, LoadingProgress>(SetLocalBounds));
             MySession.LoadingLocalTotalSet = (Action<float>)Delegate.Combine(MySession.LoadingLocalTotalSet, new Action<float>(SetLocalTotal));
-
-
-           
-
-
-
-
         }
 
         private void OnLocalRespawnRequested()

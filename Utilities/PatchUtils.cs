@@ -21,17 +21,20 @@ namespace SeamlessClient.Components
         public static readonly Type ClientType =
             Type.GetType("Sandbox.Engine.Multiplayer.MyMultiplayerClient, Sandbox.Game");
 
-        public static readonly Type SyncLayerType = Type.GetType("Sandbox.Game.Multiplayer.MySyncLayer, Sandbox.Game");
+        public static readonly Type SyncLayerType = 
+            Type.GetType("Sandbox.Game.Multiplayer.MySyncLayer, Sandbox.Game");
 
         public static readonly Type MyTransportLayerType =
             Type.GetType("Sandbox.Engine.Multiplayer.MyTransportLayer, Sandbox.Game");
 
-        public static readonly Type MySessionType = Type.GetType("Sandbox.Game.World.MySession, Sandbox.Game");
+        public static readonly Type MySessionType = 
+            Type.GetType("Sandbox.Game.World.MySession, Sandbox.Game");
 
         public static readonly Type VirtualClientsType =
             Type.GetType("Sandbox.Engine.Multiplayer.MyVirtualClients, Sandbox.Game");
 
-        public static readonly Type GUIScreenChat = Type.GetType("Sandbox.Game.Gui.MyGuiScreenChat, Sandbox.Game");
+        public static readonly Type GUIScreenChat = 
+            Type.GetType("Sandbox.Game.Gui.MyGuiScreenChat, Sandbox.Game");
 
         public static readonly Type MyMultiplayerClientBase =
             Type.GetType("Sandbox.Engine.Multiplayer.MyMultiplayerClientBase, Sandbox.Game");
@@ -49,13 +52,13 @@ namespace SeamlessClient.Components
             Type.GetType("Sandbox.Game.Screens.Helpers.MyLoadingScreenQuote, Sandbox.Game");
 
         public static readonly Type MyLoadingScreenHint =
-    Type.GetType("Sandbox.Game.Screens.Helpers.MyLoadingScreenHint, Sandbox.Game");
+            Type.GetType("Sandbox.Game.Screens.Helpers.MyLoadingScreenHint, Sandbox.Game");
 
         public static readonly Type MyLoadingPerformance =
-Type.GetType("Sandbox.Engine.Utils.MyLoadingPerformance, Sandbox.Game");
+            Type.GetType("Sandbox.Engine.Utils.MyLoadingPerformance, Sandbox.Game");
 
         public static readonly Type MyLoadingScreenText =
-Type.GetType("Sandbox.Game.Screens.Helpers.MyLoadingScreenText, Sandbox.Game");
+            Type.GetType("Sandbox.Game.Screens.Helpers.MyLoadingScreenText, Sandbox.Game");
 
 
         /* Harmony Patcher */

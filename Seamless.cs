@@ -41,9 +41,6 @@ namespace SeamlessClient
         public static bool isDebug = true;
         public static bool UseNewVersion = false;
 
-        
-
-
         public void Init(object gameInstance)
         {
             TryShow($"Running Seamless Client Plugin v[{SeamlessVersion}]");
@@ -115,7 +112,7 @@ namespace SeamlessClient
 
         private static void MessageHandler2(ushort packetID, byte[] data, ulong sender, bool fromServer)
         {
-            Seamless.TryShow("Recieved visuals");
+            TryShow("Recieved visuals");
         }
 
         private static void MessageHandler(ushort packetID, byte[] data, ulong sender, bool fromServer)
@@ -159,12 +156,11 @@ namespace SeamlessClient
             //Seamless.TryShow("Sending Seamless request...");
         }
 
-
-
         public void Dispose()
         {
            
         }
+
         public void Update()
         {
             allComps.ForEach(x => x.Update());
@@ -188,8 +184,6 @@ namespace SeamlessClient
             MySandboxGame.PausePop();
         }
 
-
-
         public static void StartSwitch(TransferData targetServer)
         {
             if (targetServer.TargetServerId == 0)
@@ -212,16 +206,7 @@ namespace SeamlessClient
 
             SeamlessSwitcher.Instance.StartSwitch(server, world);
             //Temp fix till im not lazy enough to fix new version
-
-
         }
-
-
-
-
-
-
-
 
         public static void TryShow(string message)
         {
