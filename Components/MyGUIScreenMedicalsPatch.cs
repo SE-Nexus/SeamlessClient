@@ -39,6 +39,10 @@ namespace SeamlessClient.Components
                 return;
 
             MyGuiControlTable myGuiControlTable = (MyGuiControlTable)typeof(MyGuiScreenMedicals).GetField("m_respawnsTable", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic).GetValue(__instance);
+            if (myGuiControlTable == null)
+                return;
+
+
             string s = MyTexts.GetString(MySpaceTexts.SpawnInSpaceSuit);
             foreach (var item in myGuiControlTable.Rows)
             {

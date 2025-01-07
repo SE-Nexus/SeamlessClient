@@ -37,9 +37,8 @@ namespace SeamlessClient
         private bool Initilized = false;
         public static bool isSeamlessServer { get; private set; } = false;
         public static bool isDebug = false;
-        public static bool UseNewVersion = true;
-
-        
+        public static bool UseNewVersion = false;
+  
 
 
         public void Init(object gameInstance)
@@ -47,10 +46,11 @@ namespace SeamlessClient
             TryShow($"Running Seamless Client Plugin v[{SeamlessVersion}]");
             SeamlessPatcher = new Harmony("SeamlessClientPatcher");
             GetComponents();
-            
 
             PatchComponents(SeamlessPatcher);
         }
+
+
 
 
         private void GetComponents()
@@ -111,7 +111,6 @@ namespace SeamlessClient
             }
         }
 
-
         private static void MessageHandler(ushort packetID, byte[] data, ulong sender, bool fromServer)
         {
             //Ignore anything except dedicated server
@@ -146,6 +145,9 @@ namespace SeamlessClient
             }
         }
 
+        
+
+
         public static void SendSeamlessVersion()
         {
             ClientMessage response = new ClientMessage(SeamlessVersion.ToString());
@@ -161,6 +163,10 @@ namespace SeamlessClient
         }
         public void Update()
         {
+
+
+
+
             allComps.ForEach(x => x.Update());
 
             if (MyAPIGateway.Multiplayer == null)
@@ -210,8 +216,6 @@ namespace SeamlessClient
             else
                 ServerSwitcherComponentOLD.Instance.StartBackendSwitch(server, world);
         }
-
-
 
 
 

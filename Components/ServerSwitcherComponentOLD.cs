@@ -27,12 +27,19 @@ using Sandbox.Game;
 using VRage.Game.ModAPI;
 using VRage.Utils;
 using SeamlessClient.ServerSwitching;
+using Sandbox.Game.Entities.Character;
+using VRage.Game.Utils;
+using VRage;
+using Sandbox.Game.GameSystems.CoordinateSystem;
 
 namespace SeamlessClient.Components
 {
     public class ServerSwitcherComponentOLD : ComponentBase
     {
-        private static bool isSeamlessSwitching = false;
+        private static bool isSeamlessSwitching { get; set; } = false;
+        private static bool WaitingForClientCheck { get; set; } = false;
+
+
         private static ConstructorInfo TransportLayerConstructor;
         private static ConstructorInfo SyncLayerConstructor;
         private static ConstructorInfo ClientConstructor;
@@ -53,9 +60,28 @@ namespace SeamlessClient.Components
         private string OldArmorSkin { get; set; } = string.Empty;
 
         public ServerSwitcherComponentOLD() { Instance = this; }
+        public static string SwitchingText = string.Empty;
 
 
+        public override void Update()
+        {
+            //Toggle waiting for client check
+            if (WaitingForClientCheck == false && isSeamlessSwitching)
+                WaitingForClientCheck = true;
 
+            if(WaitingForClientCheck && MySession.Static.LocalHumanPlayer != null)
+                WaitingForClientCheck = false;
+
+            if (isSeamlessSwitching || WaitingForClientCheck)
+            {
+                //SeamlessClient.TryShow("Switching Servers!");
+                MyRenderProxy.DebugDrawText2D(new VRageMath.Vector2(MySandboxGame.ScreenViewport.Width/2, MySandboxGame.ScreenViewport.Height - 150), SwitchingText, VRageMath.Color.AliceBlue, 1f, MyGuiDrawAlignEnum.HORISONTAL_CENTER_AND_VERTICAL_CENTER);
+                MyRenderProxy.DebugDrawText2D(new VRageMath.Vector2(MySandboxGame.ScreenViewport.Width / 2, MySandboxGame.ScreenViewport.Height - 200), $"Transferring to {TargetServer.Name}", VRageMath.Color.Yellow, 1.5f, MyGuiDrawAlignEnum.HORISONTAL_CENTER_AND_VERTICAL_CENTER);
+
+
+                MyRenderProxy.DebugDrawLine2D(new VRageMath.Vector2((MySandboxGame.ScreenViewport.Width / 2) - 250, MySandboxGame.ScreenViewport.Height - 170), new VRageMath.Vector2((MySandboxGame.ScreenViewport.Width / 2)+250, MySandboxGame.ScreenViewport.Height - 170), VRageMath.Color.Blue, VRageMath.Color.Green);
+            }
+        }
 
 
         public override void Patch(Harmony patcher)
@@ -85,13 +111,28 @@ namespace SeamlessClient.Components
                 //SeamlessClient.TryShow("User Joined! Result: " + msg.JoinResult.ToString());
 
                 //Invoke the switch event
+                SwitchingText = "Server Responded! Removing Old Entities and forcing client connection!";
+                RemoveOldEntities();
                 ForceClientConnection();
+
+                //Fix any character issues
+                if (MySession.Static.LocalCharacter != null)
+                    MySession.Static.LocalHumanPlayer.SpawnIntoCharacter(MySession.Static.LocalCharacter);
+
                 isSeamlessSwitching = false;
             }
         }
 
         public void StartBackendSwitch(MyGameServerItem _TargetServer, MyObjectBuilder_World _TargetWorld)
         {
+
+            if(MySession.Static.LocalCharacter != null)
+            {
+                var viewMatrix = MySession.Static.LocalCharacter.GetViewMatrix();
+                MySpectator.Static.SetViewMatrix(viewMatrix);
+            }
+           
+            SwitchingText = "Starting Seamless Switch... Please wait!";
             isSeamlessSwitching = true;
             OldArmorSkin = MySession.Static.LocalHumanPlayer.BuildArmorSkin;
             TargetServer = _TargetServer;
@@ -104,8 +145,8 @@ namespace SeamlessClient.Components
                 UnloadCurrentServer();
                 SetNewMultiplayerClient();
                 //SeamlessClient.IsSwitching = false;
-               
 
+                SwitchingText = "Waiting for server response...";
             }, "SeamlessClient");
 
         }
@@ -129,12 +170,13 @@ namespace SeamlessClient.Components
             // Set the new SyncLayer to the MySession.Static.SyncLayer
             MySessionLayer.SetValue(MySession.Static, MyMultiplayer.Static.SyncLayer);
 
+            SwitchingText = "New Multiplayer Session Set";
             Seamless.TryShow("Successfully set MyMultiplayer.Static");
 
 
             Sync.Clients.SetLocalSteamId(Sync.MyId, false, MyGameService.UserName);
             Sync.Players.RegisterEvents();
-
+            SwitchingText = "Registering Player Events";
         }
 
 
@@ -147,7 +189,7 @@ namespace SeamlessClient.Components
 
             //Load force load any connected players
             LoadConnectedClients();
-
+            SwitchingText = "Loaded Connected Clients";
 
 
             MySector.InitEnvironmentSettings(TargetWorld.Sector.Environment);
@@ -159,10 +201,8 @@ namespace SeamlessClient.Components
 
             MyModAPIHelper.Initialize();
             MySession.Static.LoadDataComponents();
-
-            //MySession.Static.LoadObjectBuildersComponents(TargetWorld.Checkpoint.SessionComponents);
             MyModAPIHelper.Initialize();
-            // MySession.Static.LoadObjectBuildersComponents(TargetWorld.Checkpoint.SessionComponents);
+
 
 
             //MethodInfo A = typeof(MySession).GetMethod("LoadGameDefinition", BindingFlags.Instance | BindingFlags.NonPublic);
@@ -171,7 +211,7 @@ namespace SeamlessClient.Components
 
 
             MyMultiplayer.Static.OnSessionReady();
-
+            SwitchingText = "Session Ready";
 
             UpdateWorldGenerator();
 
@@ -180,13 +220,14 @@ namespace SeamlessClient.Components
 
             MyHud.Chat.RegisterChat(MyMultiplayer.Static);
             GpsRegisterChat.Invoke(MySession.Static.Gpss, new object[] { MyMultiplayer.Static });
-
+            SwitchingText = "Registered Chat";
 
             // Allow the game to start proccessing incoming messages in the buffer
             MyMultiplayer.Static.StartProcessingClientMessages();
 
             //Recreate all controls... Will fix weird gui/paint/crap
             MyGuiScreenHudSpace.Static.RecreateControls(true);
+            SwitchingText = "Client Registered. Waiting for entities from server...";
             //MySession.Static.LocalHumanPlayer.BuildArmorSkin = OldArmorSkin;
         }
 
@@ -441,8 +482,7 @@ namespace SeamlessClient.Components
                 throw new Exception("MyMultiplayer.Static is null on unloading? dafuq?");
 
 
-            RemoveOldEntities();
-
+            SwitchingText = "Unloading Local Server Components";
             //Try and close the quest log
             MySessionComponentIngameHelp component = MySession.Static.GetComponent<MySessionComponentIngameHelp>();
             component?.TryCancelObjective();
@@ -463,6 +503,10 @@ namespace SeamlessClient.Components
             MyMultiplayer.Static.ReplicationLayer.Dispose();
             MyMultiplayer.Static.Dispose();
             MyMultiplayer.Static = null;
+            SwitchingText = "Local Multiplayer Disposed";
+
+            //Clear grid coord systems
+            ResetCoordinateSystems();
 
             //Close any respawn screens that are open
             MyGuiScreenMedicals.Close();
@@ -471,7 +515,7 @@ namespace SeamlessClient.Components
 
         }
 
-        private void RemoveOldEntities()
+        private static void RemoveOldEntities()
         {
             foreach (var ent in MyEntities.GetEntities())
             {
@@ -482,6 +526,11 @@ namespace SeamlessClient.Components
             }
         }
 
+        private static void ResetCoordinateSystems()
+        {
+            AccessTools.Field(typeof(MyCoordinateSystem), "m_lastCoordSysId").SetValue(MyCoordinateSystem.Static, 1L);
+            AccessTools.Field(typeof(MyCoordinateSystem), "m_localCoordSystems").SetValue(MyCoordinateSystem.Static, new Dictionary<long, MyLocalCoordSys>());
+        }   
 
 
 

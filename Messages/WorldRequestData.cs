@@ -24,7 +24,7 @@ namespace SeamlessClient.Messages
         [ProtoMember(3)] public string PlayerName;
         [ProtoMember(4)] public byte[] WorldData;
 
-        [ProtoMember(5)] public MyObjectBuilder_Gps GpsCollection;
+        [ProtoMember(5)] public MyObjectBuilder_Gps GpsCollection { get; set; }
 
         public WorldRequest()
         {
