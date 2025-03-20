@@ -1,6 +1,7 @@
 ﻿using HarmonyLib;
 using NLog.Fluent;
 using Sandbox;
+using Sandbox.Engine.Multiplayer;
 using Sandbox.Game.Localization;
 using Sandbox.Game.World;
 using Sandbox.ModAPI;
@@ -48,10 +49,15 @@ namespace SeamlessClient
             GetComponents();
 
             PatchComponents(SeamlessPatcher);
+            MySession.LoadingStep += SessionLoaded;
         }
 
 
-
+        private void SessionLoaded(LoadingProgress progress)
+        {
+            if (progress >= LoadingProgress.PROGRESS_STEP8)
+                SendSeamlessVersion();
+        }
 
         private void GetComponents()
         {
@@ -95,6 +101,8 @@ namespace SeamlessClient
             }
         }
 
+
+
         private void InitilizeComponents()
         {
             foreach(ComponentBase component in allComps)
@@ -128,17 +136,11 @@ namespace SeamlessClient
             isSeamlessServer = true;
             switch (msg.MessageType)
             {
-                case ClientMessageType.FirstJoin:
-                    Seamless.TryShow("Sending First Join!");
-                    SendSeamlessVersion();
-                    break;
-
                 case ClientMessageType.TransferServer:
                     StartSwitch(msg.GetTransferData());
                     break;
 
                 case ClientMessageType.OnlinePlayers:
-                    //Not implemented yet
                     var playerData = msg.GetOnlinePlayers();
                     PlayersWindowComponent.ApplyRecievedPlayers(playerData.OnlineServers, playerData.currentServerID);
                     break;

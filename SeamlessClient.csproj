@@ -103,6 +103,7 @@
   <ItemGroup>
     <Compile Include="Components\EntityPerformanceImprovements.cs" />
     <Compile Include="Components\LoadingScreenComponent.cs" />
+    <Compile Include="Components\ModAPI.cs" />
     <Compile Include="Components\MyGUIScreenMedicalsPatch.cs" />
     <Compile Include="Components\MyHudTimeTracker.cs" />
     <Compile Include="Components\ServerSwitcherComponentOLD.cs" />

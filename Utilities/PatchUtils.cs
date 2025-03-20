@@ -97,7 +97,7 @@ Type.GetType("Sandbox.Game.Screens.Helpers.MyLoadingScreenText, Sandbox.Game");
             
 
 
-            //MethodInfo ConnectToServer = GetMethod(typeof(MyGameService), "ConnectToServer", BindingFlags.Static | BindingFlags.Public);
+            
             base.Patch(patcher);
         }
 

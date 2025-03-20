@@ -115,7 +115,7 @@ namespace SeamlessClient.Components
                 RemoveOldEntities();
                 ForceClientConnection();
 
-                //Fix any character issues
+                //Fix any character issues? Maybe this fixes weird character unmoving bug?
                 if (MySession.Static.LocalCharacter != null)
                     MySession.Static.LocalHumanPlayer.SpawnIntoCharacter(MySession.Static.LocalCharacter);
 
@@ -183,6 +183,9 @@ namespace SeamlessClient.Components
 
         private static void ForceClientConnection()
         {
+            //Pause the game/update thread while we load
+            MySandboxGame.IsPaused = true;
+
 
             //Set World Settings
             SetWorldSettings();
@@ -217,6 +220,8 @@ namespace SeamlessClient.Components
 
             StartEntitySync();
 
+            //Resume the game/update thread
+            MySandboxGame.IsPaused = false;
 
             MyHud.Chat.RegisterChat(MyMultiplayer.Static);
             GpsRegisterChat.Invoke(MySession.Static.Gpss, new object[] { MyMultiplayer.Static });

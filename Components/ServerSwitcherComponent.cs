@@ -179,6 +179,7 @@ namespace SeamlessClient.ServerSwitching
                     MySandboxGame.PausePop();
                 }
 
+                ModAPI.ServerSwitched();
                 SendPlayerData.Invoke(MyMultiplayer.Static, new object[] { MyGameService.OnlineName });
                 isSwitch = false;
             }
@@ -422,7 +423,7 @@ namespace SeamlessClient.ServerSwitching
             Seamless.TryShow($"2 NexusMajor: {Seamless.NexusVersion.Major} - ConrolledEntity {MySession.Static.ControlledEntity == null} - HumanPlayer {MySession.Static.LocalHumanPlayer == null} - Character {MySession.Static.LocalCharacter == null}");
 
 
-
+            ModAPI.StartModSwitching();
 
             //MyMultiplayer.Static.ReplicationLayer.Disconnect();
             //MyMultiplayer.Static.ReplicationLayer.Dispose();

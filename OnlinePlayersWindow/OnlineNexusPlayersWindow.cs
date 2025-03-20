@@ -385,8 +385,6 @@ namespace SeamlessClient.OnlinePlayersWindow
             Controls.Add(m_playersTable);
 
 
-            string servername = PlayersWindowComponent.onlineServer?.ServerName ?? "thisServer";
-
             foreach (MyPlayer onlinePlayer in Sync.Players.GetOnlinePlayers())
             {
                 if (onlinePlayer.Id.SerialId != 0)
@@ -403,9 +401,7 @@ namespace SeamlessClient.OnlinePlayersWindow
                     }
                 }
 
-
-
-                AddPlayer(onlinePlayer.Id.SteamId, servername);
+                AddPlayer(onlinePlayer.Id.SteamId, $"{MyMultiplayer.Static.HostName ?? "thisServer"}*");
             }
 
 
