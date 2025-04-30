@@ -100,8 +100,23 @@ namespace SeamlessClient.Components
             InitVirtualClients = PatchUtils.GetMethod(PatchUtils.VirtualClientsType, "Init");
             VirtualClients = PatchUtils.GetField(typeof(MySession), "VirtualClients");
 
+   
+            var IsPausedProperty = AccessTools.PropertyGetter(typeof(MySandboxGame), "IsPaused");
+
             patcher.Patch(onJoin, postfix: new HarmonyMethod(Get(typeof(ServerSwitcherComponentOLD), nameof(OnUserJoined))));
+            patcher.Patch(IsPausedProperty, prefix: new HarmonyMethod(Get(typeof(ServerSwitcherComponentOLD), nameof(SeamlessPause))));
             base.Patch(patcher);
+        }
+
+        public static bool SeamlessPause(ref bool __result)
+        {
+            if (isSeamlessSwitching)
+            {
+                __result = true;
+                return false;  // Skip the original method
+            }
+
+            return true;  
         }
 
         private static void OnUserJoined(ref JoinResultMsg msg)
@@ -140,9 +155,10 @@ namespace SeamlessClient.Components
 
             MySandboxGame.Static.Invoke(delegate
             {
-                //Set camera controller to fixed spectator
-
+                //Pause the game/update thread while we load
                 MySandboxGame.IsPaused = true;
+
+                //Set camera controller to fixed spectator
                 MySession.Static.SetCameraController(MyCameraControllerEnum.SpectatorFixed);
                 UnloadCurrentServer();
                 SetNewMultiplayerClient();
@@ -167,14 +183,14 @@ namespace SeamlessClient.Components
             MyMultiplayer.Static = UtilExtensions.CastToReflected(instance, PatchUtils.ClientType);
             MyMultiplayer.Static.ExperimentalMode = true;
 
-
+         
 
             // Set the new SyncLayer to the MySession.Static.SyncLayer
             MySessionLayer.SetValue(MySession.Static, MyMultiplayer.Static.SyncLayer);
 
             SwitchingText = "New Multiplayer Session Set";
             Seamless.TryShow("Successfully set MyMultiplayer.Static");
-
+            MySandboxGame.IsPaused = true;
 
             Sync.Clients.SetLocalSteamId(Sync.MyId, false, MyGameService.UserName);
             Sync.Players.RegisterEvents();
@@ -185,8 +201,7 @@ namespace SeamlessClient.Components
 
         private static void ForceClientConnection()
         {
-            //Pause the game/update thread while we load
-            MySandboxGame.IsPaused = true;
+         
 
 
             //Set World Settings
