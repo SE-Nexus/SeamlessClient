@@ -100,7 +100,7 @@ namespace SeamlessClient.Components
             InitVirtualClients = PatchUtils.GetMethod(PatchUtils.VirtualClientsType, "Init");
             VirtualClients = PatchUtils.GetField(typeof(MySession), "VirtualClients");
 
-           patcher.Patch(onJoin, postfix: new HarmonyMethod(Get(typeof(ServerSwitcherComponentOLD), nameof(OnUserJoined))));
+            patcher.Patch(onJoin, postfix: new HarmonyMethod(Get(typeof(ServerSwitcherComponentOLD), nameof(OnUserJoined))));
             base.Patch(patcher);
         }
 
@@ -141,6 +141,8 @@ namespace SeamlessClient.Components
             MySandboxGame.Static.Invoke(delegate
             {
                 //Set camera controller to fixed spectator
+
+                MySandboxGame.IsPaused = true;
                 MySession.Static.SetCameraController(MyCameraControllerEnum.SpectatorFixed);
                 UnloadCurrentServer();
                 SetNewMultiplayerClient();
@@ -396,6 +398,8 @@ namespace SeamlessClient.Components
 
         private static void LoadConnectedClients()
         {
+
+            //TargetWorld.Checkpoint.AllPlayers.Count
 
             LoadMembersFromWorld.Invoke(MySession.Static, new object[] { TargetWorld, MyMultiplayer.Static });
 
