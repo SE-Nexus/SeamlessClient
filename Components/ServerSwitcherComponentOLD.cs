@@ -100,24 +100,10 @@ namespace SeamlessClient.Components
             InitVirtualClients = PatchUtils.GetMethod(PatchUtils.VirtualClientsType, "Init");
             VirtualClients = PatchUtils.GetField(typeof(MySession), "VirtualClients");
 
-   
-            var IsPausedProperty = AccessTools.PropertyGetter(typeof(MySandboxGame), "IsPaused");
-
             patcher.Patch(onJoin, postfix: new HarmonyMethod(Get(typeof(ServerSwitcherComponentOLD), nameof(OnUserJoined))));
-            patcher.Patch(IsPausedProperty, prefix: new HarmonyMethod(Get(typeof(ServerSwitcherComponentOLD), nameof(SeamlessPause))));
             base.Patch(patcher);
         }
 
-        public static bool SeamlessPause(ref bool __result)
-        {
-            if (isSeamlessSwitching)
-            {
-                __result = true;
-                return false;  // Skip the original method
-            }
-
-            return true;  
-        }
 
         private static void OnUserJoined(ref JoinResultMsg msg)
         {
@@ -254,6 +240,9 @@ namespace SeamlessClient.Components
             //Recreate all controls... Will fix weird gui/paint/crap
             MyGuiScreenHudSpace.Static.RecreateControls(true);
             SwitchingText = "Client Registered. Waiting for entities from server...";
+           
+
+            Seamless.TryShow($"LocalHumanPlayer = {MySession.Static.LocalHumanPlayer == null}");
             //MySession.Static.LocalHumanPlayer.BuildArmorSkin = OldArmorSkin;
         }
 
@@ -419,7 +408,7 @@ namespace SeamlessClient.Components
         {
 
             //TargetWorld.Checkpoint.AllPlayers.Count
-
+            Seamless.TryShow($"Loading members from world... {TargetWorld.Checkpoint.AllPlayers.Count}");
             LoadMembersFromWorld.Invoke(MySession.Static, new object[] { TargetWorld, MyMultiplayer.Static });
 
 
@@ -539,8 +528,8 @@ namespace SeamlessClient.Components
             //Close any respawn screens that are open
             MyGuiScreenMedicals.Close();
 
-            //MySession.Static.UnloadDataComponents();
-
+            //Unload any lingering updates queued
+            MyEntities.Orchestrator.Unload();
         }
 
         private static void RemoveOldEntities()
