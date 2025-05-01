@@ -126,9 +126,11 @@ namespace SeamlessClient.Components
                 //SeamlessClient.TryShow("User Joined! Result: " + msg.JoinResult.ToString());
 
                 //Invoke the switch event
+
                 SwitchingText = "Server Responded! Removing Old Entities and forcing client connection!";
                 RemoveOldEntities();
                 ForceClientConnection();
+                ModAPI.ServerSwitched();
 
                 //Fix any character issues? Maybe this fixes weird character unmoving bug?
                 if (MySession.Static.LocalCharacter != null)
@@ -162,6 +164,8 @@ namespace SeamlessClient.Components
                 MySession.Static.SetCameraController(MyCameraControllerEnum.SpectatorFixed);
                 UnloadCurrentServer();
                 SetNewMultiplayerClient();
+                ModAPI.StartModSwitching();
+
                 //SeamlessClient.IsSwitching = false;
 
                 SwitchingText = "Waiting for server response...";

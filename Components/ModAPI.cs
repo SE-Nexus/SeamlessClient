@@ -14,11 +14,20 @@ using VRage.Utils;
 
 namespace SeamlessClient.Components
 {
+    /// <summary>
+    /// ModAPI so that mods can register seamless events
+    /// </summary>
     public class ModAPI : ComponentBase
     {
         private static FieldInfo SessionComponents;
-        private static List<MySessionComponentBase> LoadedMods = new List<MySessionComponentBase>();
+        private static List<LoadedMod> LoadedMods = new List<LoadedMod>();
 
+        public class LoadedMod
+        {
+            public MethodInfo SeamlessServerUnload;
+            public MethodInfo SeamlessServerLoad;
+            public MySessionComponentBase ModSession;
+        }
 
 
         public override void Patch(Harmony patcher)
@@ -40,43 +49,33 @@ namespace SeamlessClient.Components
 
         public static void StartModSwitching()
         {
-            foreach(var mod in LoadedMods)
+
+            Seamless.TryShow($"Invoking SeamlessUnload API on {LoadedMods.Count} mods!");
+            foreach (var mod in LoadedMods)
             {
-                if (!mod.Loaded)
-                    continue;
-
-                MethodInfo Unload = PatchUtils.GetMethod(mod.GetType(), "SeamlessServerUnloaded");
-                
-                if (Unload == null)
-                    continue;
-
                 try
                 {
-                    Unload.Invoke(mod, null);
+                    mod.SeamlessServerUnload?.Invoke(mod.ModSession, null);
                 }
                 catch (Exception ex)
                 {
-                    Seamless.TryShow(ex, "Error during modAPI unloading!");
+                    Seamless.TryShow(ex, $"Error during modAPI unloading! {mod.SeamlessServerUnload.Name}");
                 }
             }
         }
 
         public static void ServerSwitched()
         {
+            Seamless.TryShow($"Invoking SeamlessServerLoad API on {LoadedMods.Count} mods!");
             foreach (var mod in LoadedMods)
             {
-                if (!mod.Loaded)
-                    continue;
-                MethodInfo Load = PatchUtils.GetMethod(mod.GetType(), "SeamlessServerLoaded");
-                if (Load == null)
-                    continue;
                 try
                 {
-                    Load.Invoke(mod, null);
+                    mod.SeamlessServerLoad?.Invoke(mod.ModSession, null);
                 }
                 catch (Exception ex)
                 {
-                    Seamless.TryShow(ex, "Error during modAPI loading!");
+                    Seamless.TryShow(ex, $"Error during modAPI loading! {mod.SeamlessServerLoad.Name}");
                 }
             }
         }
@@ -84,13 +83,35 @@ namespace SeamlessClient.Components
 
         public static void AddModAssembly(Type type, bool modAssembly, MyModContext context)
         {
+
             if (!modAssembly || context == null)
                 return;
 
             CachingDictionary<Type, MySessionComponentBase> dict = (CachingDictionary<Type, MySessionComponentBase>)SessionComponents.GetValue(MySession.Static);
             dict.TryGetValue(type, out MySessionComponentBase component);
             Seamless.TryShow($"Loading Mod Assembly: {component.ComponentType.FullName}");
-            LoadedMods.Add(component);
+
+            MethodInfo Load = AccessTools.Method(component.ComponentType, "SeamlessServerLoaded");
+            MethodInfo Unload = AccessTools.Method(component.ComponentType, "SeamlessServerUnloaded");
+
+            if(Load != null || Unload != null)
+            {
+
+                LoadedMod newMod = new LoadedMod();
+                newMod.SeamlessServerLoad = Load;
+                newMod.SeamlessServerUnload = Unload;
+                newMod.ModSession = component;
+
+                Seamless.TryShow($"Mod Assembly: {component.ComponentType.FullName} has SeamlessServerLoaded/SeamlessServerUnloaded methods!");
+
+                LoadedMods.Add(newMod);
+                return;
+            }
+
+
+
+
+          
         }
 
 
