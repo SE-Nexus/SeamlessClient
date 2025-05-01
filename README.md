@@ -24,6 +24,7 @@ I attempted to avoid implementing any modAPI in seamless, but unfortunately, Spa
 In both scenarios, unloading static variables are often up to the mod author and sometimes are set to null. On mod load, these variables are not re-instantiated with the default values resulting in many issues. It is way easier for mod authors when needed implement seamless unload and load logic appropriately.
 
 There are two methods you can add to your mods (In the main mod session component class)
+
 private void SeamlessServerLoaded(){}
 private void SeamlessServerUnloaded(){}
 
