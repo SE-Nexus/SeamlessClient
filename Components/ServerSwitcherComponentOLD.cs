@@ -101,9 +101,51 @@ namespace SeamlessClient.Components
             VirtualClients = PatchUtils.GetField(typeof(MySession), "VirtualClients");
 
             patcher.Patch(onJoin, postfix: new HarmonyMethod(Get(typeof(ServerSwitcherComponentOLD), nameof(OnUserJoined))));
-            base.Patch(patcher);
+           
+            
         }
 
+        public override void Initilized()
+        {
+            MyAPIGateway.Utilities.MessageEntered += Utilities_MessageEntered;
+        }
+
+        private void Utilities_MessageEntered(string messageText, ref bool sendToOthers)
+        {
+            if (!messageText.StartsWith("/nexus"))
+                return;
+
+            string[] cmd = messageText.ToLowerInvariant().Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+
+            if (cmd[1] == "refreshcharacter")
+            {
+                if(MySession.Static.LocalHumanPlayer == null)
+                {
+                    MyAPIGateway.Utilities?.ShowMessage("Seamless", "LocalHumanPlayer Null!");
+                    return;
+                }
+
+                if (MySession.Static.LocalHumanPlayer.Character == null)
+                {
+                    MyAPIGateway.Utilities?.ShowMessage("Seamless", "LocalHumanPlayerCharacter Null!");
+                    return;
+                }
+
+
+                //None of this shit works.... 5/3/2025
+                MySession.Static.LocalHumanPlayer.SpawnIntoCharacter(MySession.Static.LocalHumanPlayer.Character);
+                MySession.Static.LocalHumanPlayer.Controller.TakeControl(MySession.Static.LocalHumanPlayer.Character);
+
+                MySession.Static.LocalHumanPlayer.Character.GetOffLadder();
+                MySession.Static.LocalHumanPlayer.Character.Stand();
+               
+                MySession.Static.LocalHumanPlayer.Character.ResetControls();
+                MySession.Static.LocalHumanPlayer.Character.UpdateCharacterPhysics(true);
+
+                MyAPIGateway.Utilities?.ShowMessage("Seamless", "Character Controls Reset!");
+
+            }
+        }
 
         private static void OnUserJoined(ref JoinResultMsg msg)
         {
@@ -118,10 +160,10 @@ namespace SeamlessClient.Components
                 ForceClientConnection();
                 ModAPI.ServerSwitched();
 
-                //Fix any character issues? Maybe this fixes weird character unmoving bug?
-                if (MySession.Static.LocalCharacter != null)
-                    MySession.Static.LocalHumanPlayer.SpawnIntoCharacter(MySession.Static.LocalCharacter);
+            
 
+
+                MySession.Static.LocalHumanPlayer?.Character?.Stand();
                 isSeamlessSwitching = false;
             }
         }
@@ -243,6 +285,9 @@ namespace SeamlessClient.Components
            
 
             Seamless.TryShow($"LocalHumanPlayer = {MySession.Static.LocalHumanPlayer == null}");
+
+            
+          
             //MySession.Static.LocalHumanPlayer.BuildArmorSkin = OldArmorSkin;
         }
 
@@ -530,6 +575,7 @@ namespace SeamlessClient.Components
 
             //Unload any lingering updates queued
             MyEntities.Orchestrator.Unload();
+            
         }
 
         private static void RemoveOldEntities()
@@ -537,7 +583,11 @@ namespace SeamlessClient.Components
             foreach (var ent in MyEntities.GetEntities())
             {
                 if (ent is MyPlanet)
+                {
+                    //Re-Add planet updates 
+                    MyEntities.RegisterForUpdate(ent);
                     continue;
+                }
 
                 ent.Close();
             }

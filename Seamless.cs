@@ -155,6 +155,8 @@ namespace SeamlessClient
             ClientMessage response = new ClientMessage(SeamlessVersion.ToString());
             MyAPIGateway.Multiplayer?.SendMessageToServer(SeamlessClientNetId, MessageUtils.Serialize(response));
             Seamless.TryShow("Sending Seamless request...");
+
+
         }
 
 

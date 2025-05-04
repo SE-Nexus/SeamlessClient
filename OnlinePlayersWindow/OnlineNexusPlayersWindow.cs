@@ -792,7 +792,7 @@ namespace SeamlessClient.OnlinePlayersWindow
 
         protected void Multiplayer_PlayerJoined(ulong userId, string userName)
         {
-            AddPlayer(userId, PlayersWindowComponent.onlineServer.ServerName);
+            AddPlayer(userId, PlayersWindowComponent.onlineServer?.ServerName ?? "Unknown");
         }
 
         protected void Multiplayer_PlayerLeft(ulong userId, MyChatMemberStateChangeEnum arg2)
