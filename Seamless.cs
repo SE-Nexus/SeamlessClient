@@ -44,12 +44,14 @@ namespace SeamlessClient
 
         public void Init(object gameInstance)
         {
-            TryShow($"Running Seamless Client Plugin v[{SeamlessVersion}]");
+           
+
+            //TryShow($"Running Seamless Client Plugin v[{SeamlessVersion}]");
             SeamlessPatcher = new Harmony("SeamlessClientPatcher");
             GetComponents();
 
             PatchComponents(SeamlessPatcher);
-            MySession.LoadingStep += SessionLoaded;
+           
         }
 
 
@@ -168,7 +170,7 @@ namespace SeamlessClient
         public void Update()
         {
 
-
+            return;
 
 
             allComps.ForEach(x => x.Update());
@@ -187,8 +189,6 @@ namespace SeamlessClient
                 Initilized = true;
             }
 
-            IMyGameServer server = MyServiceManager.Instance.GetService<IMyGameServer>();
-            MySandboxGame.PausePop();
 
 
         }

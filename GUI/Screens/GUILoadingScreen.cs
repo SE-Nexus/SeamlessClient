@@ -293,7 +293,16 @@ namespace SeamlessClient.GUI.Screens
                 if (m_screenToLoad != null)
                 {
                     MySandboxGame.Log.WriteLine("RunLoadingAction - START");
-                    RunLoad();
+
+                    try
+                    {
+
+                        RunLoad();
+
+                    }catch(Exception ex)
+                    {
+                        MySandboxGame.Log.WriteLine($"RunLoadingAction ERROR: {ex}");
+                    }
                     Action<LoadingProgress> loadingStep = MySession.LoadingStep;
                     if (loadingStep != null)
                     {

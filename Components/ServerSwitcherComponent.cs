@@ -140,7 +140,7 @@ namespace SeamlessClient.ServerSwitching
 
 
             patcher.Patch(LoadClient, prefix: new HarmonyMethod(Get(typeof(ServerSwitcherComponent), nameof(LoadClientsFromWorld))));
-            patcher.Patch(RemovePlayer, prefix: new HarmonyMethod(Get(typeof(ServerSwitcherComponent), nameof(RemovePlayerFromDict))));
+            //patcher.Patch(RemovePlayer, prefix: new HarmonyMethod(Get(typeof(ServerSwitcherComponent), nameof(RemovePlayerFromDict))));
             patcher.Patch(processAllMembersData, prefix: new HarmonyMethod(Get(typeof(ServerSwitcherComponent), nameof(ProcessAllMembersData))));
             patcher.Patch(onDisconnectedClient, prefix: new HarmonyMethod(Get(typeof(ServerSwitcherComponent), nameof(OnDisconnectedClient))));
             patcher.Patch(onClientRemoved, prefix: new HarmonyMethod(Get(typeof(ServerSwitcherComponent), nameof(RemoveClient))));
@@ -243,15 +243,6 @@ namespace SeamlessClient.ServerSwitching
             return false;
         }
 
-        private static bool RemovePlayerFromDict(MyPlayer.PlayerId playerId)
-        {
-            //Seamless.TryShow($"Removing player {playerId.SteamId} from dictionariy! \n {Environment.StackTrace.ToString()} - Sender: {MyEventContext.Current.Sender}");
-          
-
-
-            return true;
-        }
-
 
         public override void Initilized()
         {
@@ -286,7 +277,7 @@ namespace SeamlessClient.ServerSwitching
         public static bool OnDisconnectedClient(ref MyControlDisconnectedMsg data, ulong sender)
         {
             Seamless.TryShow($"OnDisconnectedClient {data.Client} - Sender {sender}");
-            if (data.Client == Sync.MyId)
+            if (isSwitch && data.Client == Sync.MyId)
                 return false;
 
             return true;
