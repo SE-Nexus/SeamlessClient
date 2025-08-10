@@ -563,7 +563,7 @@ namespace SeamlessClient.ServerSwitching
             typeof(MySandboxGame).GetField("m_pauseStackCount", BindingFlags.Static | BindingFlags.NonPublic).SetValue(null, 0);
 
 
-            MyHud.Static.LoadData();
+     
 
             //GpsRegisterChat.Invoke(MySession.Static.Gpss, new object[] { MyMultiplayer.Static });
 

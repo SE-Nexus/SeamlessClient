@@ -31,6 +31,9 @@ using Sandbox.Game.Entities.Character;
 using VRage.Game.Utils;
 using VRage;
 using Sandbox.Game.GameSystems.CoordinateSystem;
+using SpaceEngineers.Game.World;
+using VRage.Game.Components;
+using Sandbox.Graphics.GUI;
 
 namespace SeamlessClient.Components
 {
@@ -75,11 +78,11 @@ namespace SeamlessClient.Components
             if (isSeamlessSwitching || WaitingForClientCheck && TargetServer != null)
             {
                 //SeamlessClient.TryShow("Switching Servers!");
-                MyRenderProxy.DebugDrawText2D(new VRageMath.Vector2(MySandboxGame.ScreenViewport.Width/2, MySandboxGame.ScreenViewport.Height - 150), SwitchingText, VRageMath.Color.AliceBlue, 1f, MyGuiDrawAlignEnum.HORISONTAL_CENTER_AND_VERTICAL_CENTER);
-                MyRenderProxy.DebugDrawText2D(new VRageMath.Vector2(MySandboxGame.ScreenViewport.Width / 2, MySandboxGame.ScreenViewport.Height - 200), $"Transferring to {TargetServer.Name}", VRageMath.Color.Yellow, 1.5f, MyGuiDrawAlignEnum.HORISONTAL_CENTER_AND_VERTICAL_CENTER);
+                MyRenderProxy.DebugDrawText2D(new VRageMath.Vector2(MySandboxGame.ScreenViewport.Width/ 2, MySandboxGame.ScreenViewport.Height - 250), SwitchingText, VRageMath.Color.AliceBlue, 1f, MyGuiDrawAlignEnum.HORISONTAL_CENTER_AND_VERTICAL_CENTER);
+                MyRenderProxy.DebugDrawText2D(new VRageMath.Vector2(MySandboxGame.ScreenViewport.Width / 2, MySandboxGame.ScreenViewport.Height - 300), $"Transferring to {TargetServer.Name}", VRageMath.Color.Yellow, 1.5f, MyGuiDrawAlignEnum.HORISONTAL_CENTER_AND_VERTICAL_CENTER);
 
 
-                MyRenderProxy.DebugDrawLine2D(new VRageMath.Vector2((MySandboxGame.ScreenViewport.Width / 2) - 250, MySandboxGame.ScreenViewport.Height - 170), new VRageMath.Vector2((MySandboxGame.ScreenViewport.Width / 2)+250, MySandboxGame.ScreenViewport.Height - 170), VRageMath.Color.Blue, VRageMath.Color.Green);
+                MyRenderProxy.DebugDrawLine2D(new VRageMath.Vector2((MySandboxGame.ScreenViewport.Width / 2) - 250, MySandboxGame.ScreenViewport.Height - 270), new VRageMath.Vector2((MySandboxGame.ScreenViewport.Width / 2)+250, MySandboxGame.ScreenViewport.Height - 270), VRageMath.Color.Blue, VRageMath.Color.Green);
             }
         }
 
@@ -215,6 +218,7 @@ namespace SeamlessClient.Components
             MyMultiplayer.Static = UtilExtensions.CastToReflected(instance, PatchUtils.ClientType);
             MyMultiplayer.Static.ExperimentalMode = true;
 
+          
          
 
             // Set the new SyncLayer to the MySession.Static.SyncLayer
@@ -273,6 +277,7 @@ namespace SeamlessClient.Components
             MySandboxGame.IsPaused = false;
 
             MyHud.Chat.RegisterChat(MyMultiplayer.Static);
+
             GpsRegisterChat.Invoke(MySession.Static.Gpss, new object[] { MyMultiplayer.Static });
             SwitchingText = "Registered Chat";
 
@@ -391,7 +396,8 @@ namespace SeamlessClient.Components
             MyRenderProxy.RebuildCullingStructure();
             //MySession.Static.Toolbars.LoadToolbars(checkpoint);
 
-            Sync.Players.RespawnComponent.InitFromCheckpoint(TargetWorld.Checkpoint);
+            var comp = MySession.Static.GetComponent<MySpaceRespawnComponent>();
+            comp.InitFromCheckpoint(TargetWorld.Checkpoint);
 
 
             // Set new admin settings
@@ -476,12 +482,7 @@ namespace SeamlessClient.Components
 
             Seamless.TryShow("Requesting Player From Server");
             Sync.Players.RequestNewPlayer(Sync.MyId, 0, MyGameService.UserName, null, realPlayer: true, initialPlayer: true);
-            if (MySession.Static.ControlledEntity == null && Sync.IsServer && !Sandbox.Engine.Platform.Game.IsDedicated)
-            {
-                MyLog.Default.WriteLine("ControlledObject was null, respawning character");
-                //m_cameraAwaitingEntity = true;
-                MyPlayerCollection.RequestLocalRespawn();
-            }
+
 
             //Request client state batch
             (MyMultiplayer.Static as MyMultiplayerClientBase).RequestBatchConfirmation();
@@ -489,6 +490,9 @@ namespace SeamlessClient.Components
             //typeof(MyGuiScreenTerminal).GetMethod("CreateTabs")
 
             MySession.Static.LoadDataComponents();
+            var comp = MySession.Static.GetComponent<MySpaceRespawnComponent>();
+            MySession.Static.Players.RespawnComponent = comp;
+
             //MyGuiSandbox.LoadData(false);
             //MyGuiSandbox.AddScreen(MyGuiSandbox.CreateScreen(MyPerGameSettings.GUI.HUDScreen));
             MyRenderProxy.RebuildCullingStructure();
@@ -554,6 +558,7 @@ namespace SeamlessClient.Components
             MySessionComponentIngameHelp component = MySession.Static.GetComponent<MySessionComponentIngameHelp>();
             component?.TryCancelObjective();
 
+
             //Clear all old players and clients.
             Sync.Clients.Clear();
             Sync.Players.ClearPlayers();
@@ -577,6 +582,9 @@ namespace SeamlessClient.Components
 
             //Unload any lingering updates queued
             MyEntities.Orchestrator.Unload();
+
+            //Remove old medical screen
+            MyScreenManager.RemoveScreenByType(typeof(MyGuiScreenMedicals));
             
         }
 
