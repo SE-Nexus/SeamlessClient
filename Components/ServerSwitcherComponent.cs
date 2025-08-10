@@ -361,7 +361,8 @@ namespace SeamlessClient.ServerSwitching
 
 
             //Unregister Chat
-            MyHud.Chat.UnregisterChat(MyMultiplayer.Static);
+         
+        
 
             MethodInfo removeClient = PatchUtils.GetMethod(PatchUtils.ClientType, "MyMultiplayerClient_ClientLeft");
             foreach (var connectedClient in Sync.Clients.GetClients())
@@ -404,11 +405,8 @@ namespace SeamlessClient.ServerSwitching
 
             ResetReplicationTime(false);
 
-            //Remove old signals
-            MyHud.GpsMarkers.Clear();
-            MyHud.LocationMarkers.Clear();
-            MyHud.HackingMarkers.Clear();
-
+            //Reset Hud
+            MyHud.Static.UnloadDataConditional();
 
             Seamless.TryShow($"2 Streaming: {clienta.HasPendingStreamingReplicables} - LastMessage: {clienta.LastMessageFromServer}");
             Seamless.TryShow($"2 NexusMajor: {Seamless.NexusVersion.Major} - ConrolledEntity {MySession.Static.ControlledEntity == null} - HumanPlayer {MySession.Static.LocalHumanPlayer == null} - Character {MySession.Static.LocalCharacter == null}");
@@ -565,8 +563,8 @@ namespace SeamlessClient.ServerSwitching
             typeof(MySandboxGame).GetField("m_pauseStackCount", BindingFlags.Static | BindingFlags.NonPublic).SetValue(null, 0);
 
 
- 
-            MyHud.Chat.RegisterChat(MyMultiplayer.Static);
+            MyHud.Static.LoadData();
+
             //GpsRegisterChat.Invoke(MySession.Static.Gpss, new object[] { MyMultiplayer.Static });
 
 

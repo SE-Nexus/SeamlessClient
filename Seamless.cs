@@ -51,13 +51,16 @@ namespace SeamlessClient
             GetComponents();
 
             PatchComponents(SeamlessPatcher);
+
+
+
+          
            
         }
 
-
-        private void SessionLoaded(LoadingProgress progress)
+        private static void SessionLoaded()
         {
-            if (progress >= LoadingProgress.PROGRESS_STEP8)
+
                 SendSeamlessVersion();
         }
 
@@ -101,6 +104,9 @@ namespace SeamlessClient
                     TryShow(ex, $"Failed to Patch {component.GetType()}");
                 }
             }
+
+            var BeforeStart = AccessTools.Method(typeof(MySession), "LoadDataComponents");
+            patcher.Patch(BeforeStart, prefix: new HarmonyMethod(Get(typeof(Seamless), nameof(SessionLoaded))));
         }
 
 
@@ -170,9 +176,6 @@ namespace SeamlessClient
         public void Update()
         {
 
-            return;
-
-
             allComps.ForEach(x => x.Update());
 
             if (MyAPIGateway.Multiplayer == null)
@@ -181,10 +184,14 @@ namespace SeamlessClient
                 return;
             }
 
-            if (!Initilized)
+            if (!Initilized && MySession.Static != null)
             {
+    
+
                 MyAPIGateway.Multiplayer.RegisterSecureMessageHandler(SeamlessClientNetId, MessageHandler);
                 InitilizeComponents();
+                
+
 
                 Initilized = true;
             }
@@ -240,6 +247,11 @@ namespace SeamlessClient
                 MyAPIGateway.Utilities?.ShowMessage("Seamless", message + $"\n {ex.ToString()}");
 
             MyLog.Default?.WriteLineAndConsole($"SeamlessClient: {message} \n {ex.ToString()}");
+        }
+
+        public static MethodInfo Get(Type type, string v)
+        {
+            return type.GetMethod(v, BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic);
         }
     }
 }

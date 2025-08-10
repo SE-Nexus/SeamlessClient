@@ -471,6 +471,9 @@ namespace SeamlessClient.Components
 
         private static void StartEntitySync()
         {
+
+
+
             Seamless.TryShow("Requesting Player From Server");
             Sync.Players.RequestNewPlayer(Sync.MyId, 0, MyGameService.UserName, null, realPlayer: true, initialPlayer: true);
             if (MySession.Static.ControlledEntity == null && Sync.IsServer && !Sandbox.Engine.Platform.Game.IsDedicated)
@@ -555,14 +558,11 @@ namespace SeamlessClient.Components
             Sync.Clients.Clear();
             Sync.Players.ClearPlayers();
 
-
-            MyHud.Chat.UnregisterChat(MyMultiplayer.Static);
-
-
+            UnloadHud();
 
 
             MySession.Static.Gpss.RemovePlayerGpss(MySession.Static.LocalPlayerId);
-            MyHud.GpsMarkers.Clear();
+
             MyMultiplayer.Static.ReplicationLayer.Disconnect();
             MyMultiplayer.Static.ReplicationLayer.Dispose();
             MyMultiplayer.Static.Dispose();
@@ -578,6 +578,22 @@ namespace SeamlessClient.Components
             //Unload any lingering updates queued
             MyEntities.Orchestrator.Unload();
             
+        }
+
+        private static void UnloadHud()
+        {
+            MyHud.Notifications.Clear();
+            MyHud.OreMarkers.Reload();
+            MyHud.LocationMarkers.Clear();
+            MyHud.HackingMarkers.Clear();
+            MyHud.ObjectiveLine.Clear();
+            MyHud.ChangedInventoryItems.Clear();
+            MyHud.GravityIndicator.Clean();
+            MyHud.SelectedObjectHighlight.Clean();
+            MyGuiScreenToolbarConfigBase.Reset();
+            MyHud.Questlog.CleanDetails();
+            MyHud.Chat.UnregisterChat(MyMultiplayer.Static);
+
         }
 
         private static void RemoveOldEntities()
