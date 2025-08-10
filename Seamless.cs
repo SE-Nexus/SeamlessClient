@@ -223,9 +223,9 @@ namespace SeamlessClient
 
             //Temp fix till im not lazy enough to fix new version
             if (UseNewVersion)
-                ServerSwitcherComponent.Instance.StartBackendSwitch(server, world);
+                ServerSwitcherV2.Instance.StartBackendSwitch(server, world);
             else
-                ServerSwitcherComponentOLD.Instance.StartBackendSwitch(server, world);
+                ServerSwitcherV1.Instance.StartBackendSwitch(server, world);
         }
 
 

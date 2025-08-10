@@ -43,7 +43,7 @@ using VRageRender.Messages;
 
 namespace SeamlessClient.ServerSwitching
 {
-    public class ServerSwitcherComponent : ComponentBase
+    public class ServerSwitcherV2 : ComponentBase
     {
         public static ConstructorInfo ClientConstructor;
         public static ConstructorInfo SyncLayerConstructor;
@@ -64,7 +64,7 @@ namespace SeamlessClient.ServerSwitching
         private static FieldInfo VirtualClients;
 
 
-        public static ServerSwitcherComponent Instance { get; private set; }
+        public static ServerSwitcherV2 Instance { get; private set; }
 
         private MyGameServerItem TargetServer { get; set; }
         private MyObjectBuilder_World TargetWorld { get; set; }
@@ -83,7 +83,7 @@ namespace SeamlessClient.ServerSwitching
 
 
 
-        public ServerSwitcherComponent()
+        public ServerSwitcherV2()
         {
             pauseResetTimer.Elapsed += PauseResetTimer_Elapsed;
             Instance = this;
@@ -139,16 +139,16 @@ namespace SeamlessClient.ServerSwitching
             Seamless.TryShow("Patched!");
 
 
-            patcher.Patch(LoadClient, prefix: new HarmonyMethod(Get(typeof(ServerSwitcherComponent), nameof(LoadClientsFromWorld))));
+            patcher.Patch(LoadClient, prefix: new HarmonyMethod(Get(typeof(ServerSwitcherV2), nameof(LoadClientsFromWorld))));
             //patcher.Patch(RemovePlayer, prefix: new HarmonyMethod(Get(typeof(ServerSwitcherComponent), nameof(RemovePlayerFromDict))));
-            patcher.Patch(processAllMembersData, prefix: new HarmonyMethod(Get(typeof(ServerSwitcherComponent), nameof(ProcessAllMembersData))));
-            patcher.Patch(onDisconnectedClient, prefix: new HarmonyMethod(Get(typeof(ServerSwitcherComponent), nameof(OnDisconnectedClient))));
-            patcher.Patch(onClientRemoved, prefix: new HarmonyMethod(Get(typeof(ServerSwitcherComponent), nameof(RemoveClient))));
-            patcher.Patch(onAllmembersData, prefix: new HarmonyMethod(Get(typeof(ServerSwitcherComponent), nameof(OnAllMembersData))));
+            patcher.Patch(processAllMembersData, prefix: new HarmonyMethod(Get(typeof(ServerSwitcherV2), nameof(ProcessAllMembersData))));
+            patcher.Patch(onDisconnectedClient, prefix: new HarmonyMethod(Get(typeof(ServerSwitcherV2), nameof(OnDisconnectedClient))));
+            patcher.Patch(onClientRemoved, prefix: new HarmonyMethod(Get(typeof(ServerSwitcherV2), nameof(RemoveClient))));
+            patcher.Patch(onAllmembersData, prefix: new HarmonyMethod(Get(typeof(ServerSwitcherV2), nameof(OnAllMembersData))));
 
 
 
-            patcher.Patch(onClientConnected, prefix: new HarmonyMethod(Get(typeof(ServerSwitcherComponent), nameof(OnClientConnected))));
+            patcher.Patch(onClientConnected, prefix: new HarmonyMethod(Get(typeof(ServerSwitcherV2), nameof(OnClientConnected))));
 
 
             base.Patch(patcher);
