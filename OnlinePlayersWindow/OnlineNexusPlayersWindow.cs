@@ -1,39 +1,43 @@
-﻿using Sandbox;
+using HarmonyLib;
+using Sandbox;
 using Sandbox.Engine.Multiplayer;
+using Sandbox.Engine.Networking;
+using Sandbox.Engine.Utils;
+using Sandbox.Game;
+using Sandbox.Game.GameSystems;
+using Sandbox.Game.GameSystems.Chat;
 using Sandbox.Game.GameSystems.Trading;
 using Sandbox.Game.Gui;
 using Sandbox.Game.GUI;
+using Sandbox.Game.Localization;
+using Sandbox.Game.Multiplayer;
+using Sandbox.Game.SessionComponents;
 using Sandbox.Game.VoiceChat;
 using Sandbox.Game.World;
+using Sandbox.Graphics;
 using Sandbox.Graphics.GUI;
+using Sandbox.ModAPI;
+using SeamlessClient.Messages;
+using SeamlessClient.Utilities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.NetworkInformation;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
-using VRage.Audio;
-using VRage.Game.ModAPI;
-using VRage.Game;
 using VRage;
+using VRage.Audio;
+using VRage.Game;
+using VRage.Game.ModAPI;
+using VRage.Game.News;
 using VRage.GameServices;
+using VRage.Input;
+using VRage.Network;
+using VRage.Scripting;
+using VRage.Serialization;
 using VRage.Utils;
 using VRageMath;
-using Sandbox.Engine.Networking;
-using Sandbox.Engine.Utils;
-using Sandbox.Game.Localization;
-using Sandbox.Game.Multiplayer;
-using Sandbox.Game.SessionComponents;
-using Sandbox.Game;
-using Sandbox.Graphics;
-using VRage.Game.News;
-using VRage.Network;
-using VRage.Serialization;
-using VRage.Input;
-using SeamlessClient.Utilities;
-using System.Reflection;
-using HarmonyLib;
-using SeamlessClient.Messages;
 
 namespace SeamlessClient.OnlinePlayersWindow
 {
@@ -79,6 +83,8 @@ namespace SeamlessClient.OnlinePlayersWindow
         protected MyGuiControlButton m_banButton;
 
         protected MyGuiControlButton m_inviteButton;
+
+        protected MyGuiControlButton m_nexusLobbyButton;
 
         protected MyGuiControlButton m_tradeButton;
 
@@ -334,6 +340,15 @@ namespace SeamlessClient.OnlinePlayersWindow
             m_inviteButton.ButtonClicked += inviteButton_ButtonClicked;
             Controls.Add(m_inviteButton);
 
+            if (Seamless.isSeamlessServer)
+            {
+                StringBuilder nexusButton = new StringBuilder("Nexus Lobby");
+                m_nexusLobbyButton = new MyGuiControlButton(new Vector2(LeftX, 0.22500003f), MyGuiControlButtonStyleEnum.Default, null, null, MyGuiDrawAlignEnum.HORISONTAL_LEFT_AND_VERTICAL_TOP, null, nexusButton);
+                m_nexusLobbyButton.ButtonClicked += nexusButton_ButtonClicked;
+                Controls.Add(m_nexusLobbyButton);
+            }
+
+
 
             Vector2 vector6 = new Vector2(0.4f, -0.306f);
             Vector2 size = new Vector2(0.62f, 0.813f);
@@ -405,10 +420,10 @@ namespace SeamlessClient.OnlinePlayersWindow
             }
 
 
-            foreach(var server in PlayersWindowComponent.allServers)
+            foreach (var server in PlayersWindowComponent.allServers)
             {
 
-                foreach(var player in server.Players)
+                foreach (var player in server.Players)
                     AddPlayerFromOtherServer(player, server.ServerName);
             }
 
@@ -830,13 +845,13 @@ namespace SeamlessClient.OnlinePlayersWindow
             switch (lobbyType)
             {
                 case MyLobbyType.Private:
-                    return MyOnlineModeEnum.PRIVATE;
+                return MyOnlineModeEnum.PRIVATE;
                 case MyLobbyType.FriendsOnly:
-                    return MyOnlineModeEnum.FRIENDS;
+                return MyOnlineModeEnum.FRIENDS;
                 case MyLobbyType.Public:
-                    return MyOnlineModeEnum.PUBLIC;
+                return MyOnlineModeEnum.PUBLIC;
                 default:
-                    return MyOnlineModeEnum.PUBLIC;
+                return MyOnlineModeEnum.PUBLIC;
             }
         }
 
@@ -854,6 +869,12 @@ namespace SeamlessClient.OnlinePlayersWindow
             int memberLimit = MyMultiplayer.Static.MemberLimit;
             int memberCount = MyMultiplayer.Static.MemberCount;
             MyGameService.OpenInviteOverlay(Math.Max(1, memberLimit - memberCount));
+        }
+
+        protected void nexusButton_ButtonClicked(MyGuiControlButton obj)
+        {
+            MySession.Static.ChatSystem.ChangeChatChannel_Global();
+            MyMultiplayer.Static.SendChatMessage("!nexus lobby", MySession.Static.ChatSystem.CurrentChannel, MySession.Static.ChatSystem.CurrentTarget);
         }
 
         protected void promoteButton_ButtonClicked(MyGuiControlButton obj)
@@ -958,7 +979,7 @@ namespace SeamlessClient.OnlinePlayersWindow
         {
             Seamless.TryShow("Requesting Refresh Pings!");
             MyMultiplayer.RaiseStaticEvent((IMyEventOwner s) => MyGuiScreenPlayers.RequestPingsAndRefresh);
-            
+
         }
 
 
@@ -1037,13 +1058,13 @@ namespace SeamlessClient.OnlinePlayersWindow
                         {
                             case MyPlayerChatState.Silent:
                             case MyPlayerChatState.Talking:
-                                myGuiControlButton.CustomStyle = ((MyVoiceChatSessionComponent.Static != null && MyVoiceChatSessionComponent.Static.PlayerTalking(playerId)) ? m_buttonSizeStyleTalking : m_buttonSizeStyleSilent);
-                                break;
+                            myGuiControlButton.CustomStyle = ((MyVoiceChatSessionComponent.Static != null && MyVoiceChatSessionComponent.Static.PlayerTalking(playerId)) ? m_buttonSizeStyleTalking : m_buttonSizeStyleSilent);
+                            break;
                             case MyPlayerChatState.Muted:
-                                myGuiControlButton.CustomStyle = m_buttonSizeStyleMuted;
-                                break;
+                            myGuiControlButton.CustomStyle = m_buttonSizeStyleMuted;
+                            break;
                             default:
-                                throw new ArgumentOutOfRangeException();
+                            throw new ArgumentOutOfRangeException();
                         }
                     }
                 }
