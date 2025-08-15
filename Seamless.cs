@@ -60,7 +60,7 @@ namespace SeamlessClient
 
         private static void SessionLoaded()
         {
-
+            if(!MySession.Static.IsServer)
                 SendSeamlessVersion();
         }
 
