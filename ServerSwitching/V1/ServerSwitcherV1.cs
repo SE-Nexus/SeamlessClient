@@ -86,6 +86,8 @@ namespace SeamlessClient.Components
             VirtualClients = PatchUtils.GetField(typeof(MySession), "VirtualClients");
 
             patcher.Patch(onJoin, postfix: new HarmonyMethod(Get(typeof(ServerSwitcherV1), nameof(OnUserJoined))));
+
+          
         }
 
         public override void Update()
@@ -187,9 +189,10 @@ namespace SeamlessClient.Components
 
             MyMultiplayer.Static = UtilExtensions.CastToReflected(instance, PatchUtils.ClientType);
             MyMultiplayer.Static.ExperimentalMode = true;
+            MyMultiplayer.Static.HostLeft += Static_HostLeft;
+            MyGameService.Peer2Peer.ConnectionFailed += Peer2Peer_ConnectionFailed;
 
-          
-         
+
 
             // Set the new SyncLayer to the MySession.Static.SyncLayer
             MySessionLayer.SetValue(MySession.Static, MyMultiplayer.Static.SyncLayer);
@@ -203,7 +206,18 @@ namespace SeamlessClient.Components
             SwitchingText = "Registering Player Events";
         }
 
+        private void Static_HostLeft()
+        {
+            Seamless.TryShow($"MyMultiplayer Host Left. Returning to MainMenu. Transfer Failed.");
+            isSeamlessSwitching = false;
+            MyMultiplayer.Static.HostLeft -= Static_HostLeft;
+        }
 
+        private void Peer2Peer_ConnectionFailed(ulong arg1, string arg2)
+        {
+            Seamless.TryShow($"Seamless P2P Connection Failed {arg1} : {arg2}. Attempting to reconnect...");
+            MyGameService.Peer2Peer.ConnectionFailed -= Peer2Peer_ConnectionFailed;
+        }
 
         private static void ForceClientConnection()
         {
