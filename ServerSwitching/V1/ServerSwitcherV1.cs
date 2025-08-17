@@ -533,10 +533,11 @@ namespace SeamlessClient.Components
             Sync.Clients.Clear();
             Sync.Players.ClearPlayers();
 
-            UnloadHud();
+            
 
 
             MySession.Static.Gpss.RemovePlayerGpss(MySession.Static.LocalPlayerId);
+            UnloadHud();
 
             MyMultiplayer.Static.ReplicationLayer.Disconnect();
             MyMultiplayer.Static.ReplicationLayer.Dispose();
@@ -547,14 +548,17 @@ namespace SeamlessClient.Components
             //Clear grid coord systems
             ResetCoordinateSystems();
 
-            //Close any respawn screens that are open
-            MyGuiScreenMedicals.Close();
+            //Close any screens that could be open
+            //MyGuiScreenMedicals.Close();
+            MyScreenManager.CloseScreenNow(typeof(MyGuiScreenMedicals));
+            MyScreenManager.CloseScreenNow(typeof(MyGuiScreenTerminal));
 
             //Unload any lingering updates queued
             MyEntities.Orchestrator.Unload();
 
             //Remove old medical screen
             MyScreenManager.RemoveScreenByType(typeof(MyGuiScreenMedicals));
+
             
         }
 
