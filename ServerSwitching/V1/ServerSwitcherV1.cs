@@ -56,6 +56,7 @@ namespace SeamlessClient.Components
         private static FieldInfo AdminSettings;
         private static FieldInfo RemoteAdminSettings;
         private static FieldInfo VirtualClients;
+        private static FieldInfo PlayerGpss;
         private static PropertyInfo MySessionLayer;
 
         public static MyGameServerItem TargetServer { get; private set; }
@@ -68,6 +69,7 @@ namespace SeamlessClient.Components
 
         public ServerSwitcherV1() { Instance = this; }
         public static string SwitchingText = string.Empty;
+
 
         public override void Patch(Harmony patcher)
         {
@@ -84,6 +86,7 @@ namespace SeamlessClient.Components
             LoadMembersFromWorld = PatchUtils.GetMethod(typeof(MySession), "LoadMembersFromWorld");
             InitVirtualClients = PatchUtils.GetMethod(PatchUtils.VirtualClientsType, "Init");
             VirtualClients = PatchUtils.GetField(typeof(MySession), "VirtualClients");
+
 
             patcher.Patch(onJoin, postfix: new HarmonyMethod(Get(typeof(ServerSwitcherV1), nameof(OnUserJoined))));
 
@@ -543,14 +546,15 @@ namespace SeamlessClient.Components
             component?.TryCancelObjective();
 
 
+            long myPlayerID = MySession.Static.LocalPlayerId;
+
             //Clear all old players and clients.
             Sync.Clients.Clear();
             Sync.Players.ClearPlayers();
 
-            
 
 
-            MySession.Static.Gpss.RemovePlayerGpss(MySession.Static.LocalPlayerId);
+            //MySession.Static.Gpss.RemovePlayerGpss(myPlayerID);
             UnloadHud();
 
             MyMultiplayer.Static.ReplicationLayer.Disconnect();
@@ -581,6 +585,7 @@ namespace SeamlessClient.Components
             MyHud.Notifications.Clear();
             MyHud.OreMarkers.Reload();
             MyHud.LocationMarkers.Clear();
+            MyHud.GpsMarkers.Clear();
             MyHud.HackingMarkers.Clear();
             MyHud.ObjectiveLine.Clear();
             MyHud.ChangedInventoryItems.Clear();
@@ -589,6 +594,7 @@ namespace SeamlessClient.Components
             MyGuiScreenToolbarConfigBase.Reset();
             MyHud.Questlog.CleanDetails();
             MyHud.Chat.UnregisterChat(MyMultiplayer.Static);
+            
 
         }
 
