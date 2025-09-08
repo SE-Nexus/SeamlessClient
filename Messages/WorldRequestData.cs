@@ -1,5 +1,4 @@
-﻿using NLog;
-using ProtoBuf;
+﻿using ProtoBuf;
 using Sandbox.Engine.Multiplayer;
 using System;
 using System.Collections.Generic;
@@ -17,7 +16,7 @@ namespace SeamlessClient.Messages
     [ProtoContract]
     public class WorldRequest
     {
-        private static readonly Logger Log = LogManager.GetCurrentClassLogger();
+        //private static readonly Logger Log = LogManager.GetCurrentClassLogger();
 
         [ProtoMember(1)] public ulong PlayerID;
         [ProtoMember(2)] public long IdentityID;
@@ -56,7 +55,7 @@ namespace SeamlessClient.Messages
                 MyObjectBuilderSerializerKeen.SerializeXML(memoryStream, WorldData,
                     MyObjectBuilderSerializerKeen.XmlCompression.Gzip);
                 this.WorldData = memoryStream.ToArray();
-                Log.Warn("Successfully Converted World");
+                //Log.Warn("Successfully Converted World");
             }
         }
 

@@ -1,5 +1,4 @@
 ﻿using HarmonyLib;
-using NLog.Fluent;
 using Sandbox;
 using Sandbox.Engine.Multiplayer;
 using Sandbox.Game.Localization;
@@ -44,18 +43,10 @@ namespace SeamlessClient
 
         public void Init(object gameInstance)
         {
-           
-
             //TryShow($"Running Seamless Client Plugin v[{SeamlessVersion}]");
             SeamlessPatcher = new Harmony("SeamlessClientPatcher");
             GetComponents();
-
             PatchComponents(SeamlessPatcher);
-
-
-
-          
-           
         }
 
         private static void SessionLoaded()
@@ -163,16 +154,15 @@ namespace SeamlessClient
             ClientMessage response = new ClientMessage(SeamlessVersion.ToString());
             MyAPIGateway.Multiplayer?.SendMessageToServer(SeamlessClientNetId, MessageUtils.Serialize(response));
             Seamless.TryShow("Sending Seamless request...");
-
-
         }
-
 
 
         public void Dispose()
         {
            
         }
+
+
         public void Update()
         {
 
