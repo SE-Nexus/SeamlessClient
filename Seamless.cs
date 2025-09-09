@@ -219,10 +219,6 @@ namespace SeamlessClient
         }
 
 
-
-
-
-
         public static void TryShow(string message)
         {
             if (MySession.Static?.LocalHumanPlayer != null && isDebug)
