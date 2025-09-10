@@ -34,10 +34,6 @@
     <Reference Include="0Harmony, Version=2.3.6.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>packages\Lib.Harmony.2.3.6\lib\net48\0Harmony.dll</HintPath>
     </Reference>
-    <Reference Include="NLog">
-      <HintPath>GameBinaries\NLog.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
     <Reference Include="ProtoBuf.Net">
       <HintPath>GameBinaries\ProtoBuf.Net.dll</HintPath>
       <Private>False</Private>
