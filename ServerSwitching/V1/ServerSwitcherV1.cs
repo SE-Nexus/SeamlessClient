@@ -274,7 +274,7 @@ namespace SeamlessClient.Components
             //Recreate all controls... Will fix weird gui/paint/crap
 
             //MyGuiScreenColorPicker
-            MyGuiScreenHudSpace.Static.RecreateControls(true);
+            MyGuiScreenHudSpace.Static?.RecreateControls(true);
             SwitchingText = "Client Registered. Waiting for entities from server...";
            
 
