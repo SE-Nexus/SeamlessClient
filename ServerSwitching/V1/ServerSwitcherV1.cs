@@ -53,6 +53,7 @@ namespace SeamlessClient.Components
         private static MethodInfo GpsRegisterChat;
         private static MethodInfo LoadMembersFromWorld;
         private static MethodInfo InitVirtualClients;
+        private static MethodInfo UpdateLocalPlayerGameInventory;
         private static FieldInfo AdminSettings;
         private static FieldInfo RemoteAdminSettings;
         private static FieldInfo VirtualClients;
@@ -77,6 +78,8 @@ namespace SeamlessClient.Components
             SyncLayerConstructor = PatchUtils.GetConstructor(PatchUtils.SyncLayerType, new[] { PatchUtils.MyTransportLayerType });
             ClientConstructor = PatchUtils.GetConstructor(PatchUtils.ClientType, new[] { typeof(MyGameServerItem), PatchUtils.SyncLayerType });
             MySessionLayer = PatchUtils.GetProperty(typeof(MySession), "SyncLayer");
+
+            UpdateLocalPlayerGameInventory = PatchUtils.GetMethod(typeof(MySessionComponentGameInventory), "UpdateLocalPlayerGameInventory");
 
             var onJoin = PatchUtils.GetMethod(PatchUtils.ClientType, "OnUserJoined");
             UnloadProceduralWorldGenerator = PatchUtils.GetMethod(typeof(MyProceduralWorldGenerator), "UnloadData");
@@ -206,6 +209,11 @@ namespace SeamlessClient.Components
 
             Sync.Clients.SetLocalSteamId(Sync.MyId, false, MyGameService.UserName);
             Sync.Players.RegisterEvents();
+
+
+            //Keen, why oh why does this have to be private... And i have to send the client skins to the server???
+            UpdateLocalPlayerGameInventory.Invoke(MySession.Static.GetComponent<MySessionComponentGameInventory>(), null);
+            //MySession.Static.GetComponent<MySessionComponentGameInventory>().UpdateLocalPlayerGameInventory();
             SwitchingText = "Registering Player Events";
         }
 
@@ -275,6 +283,7 @@ namespace SeamlessClient.Components
 
             //MyGuiScreenColorPicker
             MyGuiScreenHudSpace.Static?.RecreateControls(true);
+            
             SwitchingText = "Client Registered. Waiting for entities from server...";
            
 
