@@ -137,6 +137,9 @@ namespace SeamlessClient.Components
                 ForceClientConnection();
                 ModAPI.ServerSwitched();
 
+                //Keen, why oh why does this have to be private... And i have to send the client skins to the server???
+                UpdateLocalPlayerGameInventory.Invoke(MySession.Static.GetComponent<MySessionComponentGameInventory>(), null);
+
 
                 //reset character movement
                 MySession.Static.LocalHumanPlayer?.Character?.Stand();
@@ -211,8 +214,7 @@ namespace SeamlessClient.Components
             Sync.Players.RegisterEvents();
 
 
-            //Keen, why oh why does this have to be private... And i have to send the client skins to the server???
-            UpdateLocalPlayerGameInventory.Invoke(MySession.Static.GetComponent<MySessionComponentGameInventory>(), null);
+           
             //MySession.Static.GetComponent<MySessionComponentGameInventory>().UpdateLocalPlayerGameInventory();
             SwitchingText = "Registering Player Events";
         }
