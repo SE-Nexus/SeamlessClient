@@ -61,11 +61,20 @@ namespace SeamlessClient.Messages
 
         public MyObjectBuilder_World DeserializeWorldData()
         {
-            MyObjectBuilderSerializerKeen.DeserializeGZippedXML<MyObjectBuilder_World>(new MemoryStream(WorldData),
-                out var objectBuilder);
-            objectBuilder.Checkpoint.Gps.Dictionary.Add(IdentityID, GpsCollection);
+            using (var stream = new MemoryStream(WorldData))
+            {
+                MyObjectBuilderSerializerKeen.DeserializeGZippedXML<MyObjectBuilder_World>(stream,
+                    out var objectBuilder);
 
-            return objectBuilder;
+                if (GpsCollection != null 
+                    && objectBuilder?.Checkpoint?.Gps?.Dictionary != null 
+                    && !objectBuilder.Checkpoint.Gps.Dictionary.ContainsKey(IdentityID))
+                {
+                    objectBuilder.Checkpoint.Gps.Dictionary.Add(IdentityID, GpsCollection);
+                }
+
+                return objectBuilder;
+            }
         }
     }
 }

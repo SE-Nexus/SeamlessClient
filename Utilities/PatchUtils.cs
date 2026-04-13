@@ -58,10 +58,6 @@ Type.GetType("Sandbox.Engine.Utils.MyLoadingPerformance, Sandbox.Game");
 Type.GetType("Sandbox.Game.Screens.Helpers.MyLoadingScreenText, Sandbox.Game");
 
 
-        /* Harmony Patcher */
-        private static readonly Harmony Patcher = new Harmony("SeamlessClientPatcher");
-
-
         /* Static Contructors */
         public static ConstructorInfo MySessionConstructor { get; private set; }
         public static ConstructorInfo MyMultiplayerClientBaseConstructor { get; private set; }
