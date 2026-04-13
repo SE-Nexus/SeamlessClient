@@ -623,7 +623,7 @@ namespace SeamlessClient.OnlinePlayersWindow
             }
 
 
-            row.AddCell(new MyGuiControlTable.Cell(ServerName));
+            row.AddCell(new MyGuiControlTable.Cell(ServerName, toolTip: ServerName));
 
 
             m_playersTable.Add(row);
@@ -709,7 +709,7 @@ namespace SeamlessClient.OnlinePlayersWindow
             }
 
 
-            row.AddCell(new MyGuiControlTable.Cell(ServerName));
+            row.AddCell(new MyGuiControlTable.Cell(ServerName, toolTip: ServerName));
 
 
             m_playersTable.Add(row);
