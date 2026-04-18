@@ -431,6 +431,9 @@ namespace SeamlessClient.ServerSwitching
                 if (ent is MyCharacter)
                     continue;
 
+
+                ent.Close();
+
                 if (needsEntityUnload)
                 {
                     ent.Close();
@@ -478,6 +481,32 @@ namespace SeamlessClient.ServerSwitching
 
             Seamless.TryShow($"4 Streaming: {clienta.HasPendingStreamingReplicables} - LastMessage: {clienta.LastMessageFromServer}");
             Seamless.TryShow($"4 NexusMajor: {Seamless.NexusVersion.Major} - ConrolledEntity {MySession.Static.ControlledEntity == null} - HumanPlayer {MySession.Static.LocalHumanPlayer == null} - Character {MySession.Static.LocalCharacter == null}");
+
+
+            return;
+            // Create constructors
+            var LayerInstance = TransportLayerConstructor.Invoke(new object[] { 2 });
+            var SyncInstance = SyncLayerConstructor.Invoke(new object[] { LayerInstance });
+            var instance = ClientConstructor.Invoke(new object[] { TargetServer, SyncInstance });
+
+
+            MyMultiplayer.Static = UtilExtensions.CastToReflected(instance, PatchUtils.ClientType);
+            MyMultiplayer.Static.ExperimentalMode = true;
+
+            
+
+            // Set the new SyncLayer to the MySession.Static.SyncLayer
+            MySessionLayer.SetValue(MySession.Static, MyMultiplayer.Static.SyncLayer);
+            Sync.Clients.SetLocalSteamId(Sync.MyId, false, MyGameService.UserName);
+            return;
+            Seamless.TryShow("Successfully set MyMultiplayer.Static");
+
+
+
+            Sync.Clients.SetLocalSteamId(Sync.MyId, false, MyGameService.UserName);
+            Sync.Players.RegisterEvents();
+
+            return;
         }
 
         private void StartSwitch()
@@ -522,12 +551,6 @@ namespace SeamlessClient.ServerSwitching
             Seamless.TryShow("Starting Components...");
             InitComponents();
 
-            Seamless.TryShow("Closing old character before entity sync...");
-            originalLocalCharacter?.Close();
-            originalLocalCharacter = null;
-
-            MyMultiplayer.Static.OnSessionReady();
-
             Seamless.TryShow("Starting Entity Sync...");
             StartEntitySync();
 
@@ -540,7 +563,7 @@ namespace SeamlessClient.ServerSwitching
             typeof(MySandboxGame).GetField("m_pauseStackCount", BindingFlags.Static | BindingFlags.NonPublic).SetValue(null, 0);
 
 
-
+     
 
             //GpsRegisterChat.Invoke(MySession.Static.Gpss, new object[] { MyMultiplayer.Static });
 
@@ -549,12 +572,13 @@ namespace SeamlessClient.ServerSwitching
             //Recreate all controls... Will fix weird gui/paint/crap
             //MyGuiScreenHudSpace.Static?.RecreateControls(true);
 
-
+           
 
 
             Seamless.TryShow($"6 NexusMajor: {Seamless.NexusVersion.Major} - ConrolledEntity {MySession.Static.ControlledEntity == null} - HumanPlayer {MySession.Static.LocalHumanPlayer == null} - Character {MySession.Static.LocalCharacter == null}");
             Seamless.TryShow($"6 Streaming: {clienta.HasPendingStreamingReplicables} - LastMessage: {clienta.LastMessageFromServer}");
-
+            
+            originalLocalCharacter?.Close();
             ResetReplicationTime(true);
 
             // Allow the game to start proccessing incoming messages in the buffer
@@ -735,6 +759,20 @@ namespace SeamlessClient.ServerSwitching
             Seamless.TryShow("Requesting Player From Server");
 
             Sync.Players.RequestNewPlayer(Sync.MyId, 0, MyGameService.UserName, null, true, true);
+            if (!Sandbox.Engine.Platform.Game.IsDedicated && MySession.Static.LocalHumanPlayer == null)
+            {
+                Seamless.TryShow("RequestNewPlayer");
+               
+
+            }
+            else if (MySession.Static.ControlledEntity == null && Sync.IsServer && !Sandbox.Engine.Platform.Game.IsDedicated)
+            {
+                Seamless.TryShow("ControlledObject was null, respawning character");
+                //m_cameraAwaitingEntity = true;
+                MyPlayerCollection.RequestLocalRespawn();
+            }
+
+            
 
             //Request client state batch
             (MyMultiplayer.Static as MyMultiplayerClientBase).RequestBatchConfirmation();
@@ -764,11 +802,6 @@ namespace SeamlessClient.ServerSwitching
             }
             MyMultiplayer.Static.PendingReplicablesDone -= Static_PendingReplicablesDone;
 
-            if (MySession.Static.LocalHumanPlayer == null || MySession.Static.LocalCharacter == null)
-            {
-                Seamless.TryShow("Character not received after replicables done! Requesting respawn...");
-                MyPlayerCollection.RequestLocalRespawn();
-            }
         }
 
         private void LoadConnectedClients()

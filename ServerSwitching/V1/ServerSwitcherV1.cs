@@ -507,12 +507,6 @@ namespace SeamlessClient.Components
                 MySandboxGame.AreClipmapsReady = false;
             }
             MyMultiplayer.Static.PendingReplicablesDone -= MyMultiplayer_PendingReplicablesDone;
-
-            if (MySession.Static.LocalHumanPlayer == null || MySession.Static.LocalCharacter == null)
-            {
-                Seamless.TryShow("Character not received after replicables done! Requesting respawn...");
-                MyPlayerCollection.RequestLocalRespawn();
-            }
         }
 
 

@@ -159,22 +159,7 @@ namespace SeamlessClient
 
         public void Dispose()
         {
-            if (Initilized)
-            {
-                MyAPIGateway.Multiplayer?.UnregisterSecureMessageHandler(SeamlessClientNetId, MessageHandler);
-                foreach (ComponentBase component in allComps)
-                {
-                    try
-                    {
-                        component.Destroy();
-                    }
-                    catch (Exception ex)
-                    {
-                        TryShow(ex, $"Failed to destroy {component.GetType()}");
-                    }
-                }
-                Initilized = false;
-            }
+           
         }
 
 
@@ -215,29 +200,22 @@ namespace SeamlessClient
                 return;
             }
 
-            try
+            var server = new MyGameServerItem
             {
-                var server = new MyGameServerItem
-                {
-                    ConnectionString = targetServer.IpAddress,
-                    SteamID = targetServer.TargetServerId,
-                    Name = targetServer.ServerName
-                };
+                ConnectionString = targetServer.IpAddress,
+                SteamID = targetServer.TargetServerId,
+                Name = targetServer.ServerName
+            };
 
 
-                Seamless.TryShow($"Beginning Redirect to server: {targetServer.TargetServerId}");
-                var world = targetServer.WorldRequest.DeserializeWorldData();
+            Seamless.TryShow($"Beginning Redirect to server: {targetServer.TargetServerId}");
+            var world = targetServer.WorldRequest.DeserializeWorldData();
 
-                //Temp fix till im not lazy enough to fix new version
-                if (UseNewVersion)
-                    ServerSwitcherV2.Instance.StartBackendSwitch(server, world);
-                else
-                    ServerSwitcherV1.Instance.StartBackendSwitch(server, world);
-            }
-            catch (Exception ex)
-            {
-                TryShow(ex, "Failed to start server switch! Player may need to reconnect.");
-            }
+            //Temp fix till im not lazy enough to fix new version
+            if (UseNewVersion)
+                ServerSwitcherV2.Instance.StartBackendSwitch(server, world);
+            else
+                ServerSwitcherV1.Instance.StartBackendSwitch(server, world);
         }
 
 
